@@ -1,0 +1,11 @@
+Tue Apr 28 15:38:47 CDT 2020
+|----------------------|---------------------------|--------------|-----------------------------|
+|      NAMESPACE       |           NAME            | TARGET PORT  |             URL             |
+|----------------------|---------------------------|--------------|-----------------------------|
+| default              | kubernetes                | No node port |
+| default              | redis                     |         6379 | http://192.168.99.100:30192 |
+| default              | web                       |         5000 | http://192.168.99.100:31452 |
+| kube-system          | kube-dns                  | No node port |
+| kubernetes-dashboard | dashboard-metrics-scraper | No node port |
+| kubernetes-dashboard | kubernetes-dashboard      | No node port |
+|----------------------|---------------------------|--------------|-----------------------------|

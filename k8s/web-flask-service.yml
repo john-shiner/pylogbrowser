@@ -1,0 +1,21 @@
+# kubectl expose deployment web --selector='app=web,tier=frontend' --type=LoadBalancer \
+#                                     --dry-run --output=yaml > web-flask-service-x.yml
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: web
+    tier: frontend
+  name: web
+spec:
+  ports:
+  - port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: web
+    tier: frontend
+  type: LoadBalancer
+status:
+  loadBalancer: {}

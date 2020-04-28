@@ -1,0 +1,36 @@
+# kubectl run web --image=johnshiner/frontend:v1 --replicas=1 --port=5000 \
+#                       --labels='app=web,tier=frontend' \
+#                       --env="GET_HOSTS_FROM=dns" \
+#                       --dry-run --output=yaml > web-flask-deployment2.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: web
+    tier: frontend
+  name: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+      tier: frontend
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: web
+        tier: frontend
+    spec:
+      containers:
+      - env:
+        - name: GET_HOSTS_FROM
+          value: dns
+        image: johnshiner/frontend:v1
+        name: web
+        ports:
+        - containerPort: 5000
+        resources: {}
+status: {}

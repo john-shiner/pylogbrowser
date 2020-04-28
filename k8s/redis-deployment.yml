@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: redis
+    tier: backend
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+      tier: backend
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: redis
+        tier: backend
+    spec:
+      containers:
+      - image: redis:6.0-rc2-alpine
+        name: redis
+        ports:
+        - containerPort: 6379
+        resources: {}
+status: {}

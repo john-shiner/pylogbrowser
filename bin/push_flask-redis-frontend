@@ -1,0 +1,7 @@
+#! /bin/sh
+
+docker login -u $DOCKER_LOGIN  -p $DOCKER_PASSWORD docker.io
+
+# docker tag $DOCKER_LOGIN/flask-redis-frontend:v1 $DOCKER_LOGIN/frontend:v1
+docker push $DOCKER_LOGIN/frontend:v1
+# minikube cache add $DOCKER_LOGIN/frontend:v1
