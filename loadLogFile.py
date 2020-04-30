@@ -1,4 +1,3 @@
-import csv
 import config
 import re
 
@@ -21,40 +20,62 @@ count = 0
 
 # Reference app: gitprojects/logbrowser
 
-with open('data/workfile') as f:
+sourcePath = "./data/"
+sourceFileName = "workfile"
+
+rawFields = [] #  parsed array of contents within each logentry field (delimited by "|")
+fields = {} #  name{}value pairs for each log entry -- no payloads or other fields with "{}" chars in value
+
+
+with open(sourcePath+sourceFileName) as f:
 
     # Each row is a logEntry
-    for read_data in f:
+    for rawString in f:
         count = count+1
         logEntryKey = "logEntry:{}".format(count)
         print(logEntryKey)
+        # pipe.hset(logEntryKey, "rawString", rawString )
 
         # Split each logEntry into separate fields
         # Each field is a key-value pair
 
-        lst = read_data.split("|")
+        rawFields = rawString.split("|")
+        # pipe.hset(logEntryKey, "rawFields", str(rawFields) )
+
 
         # breakpoint()
 
         # Handle the first field specially
-        i = lst[0]
+        i = rawFields[0]
         ii = re.sub(r"^", "timestamp|", i, count=1)
         k, v = ii.split("|")
         pipe.hset(logEntryKey, k, v )
+        fields[k] =  v
 
-        # Messy fields
-        # lst.pop(35)
-        # lst.pop(0)
-        # lst.pop(30)
+        # Remove Messy fields
+        rawFields.pop(35)
+        # rawFields.pop(0)
+        rawFields.pop(30)
 
-        for i in range(1 , len(lst)):
+        for i in range(1 , len(rawFields)):
            # Replace the first ':' character with a '|' to obtain proper k-v split
-           j = lst[i].replace(":", "|", 1)
+           j = rawFields[i].replace(":", "|", 1)
 
            k, v = j.split("|")
 
+           fields[k] = v
+
            # Populate the logEntryKey hash for each logEntry key-value pair
            pipe.hset(logEntryKey, k, v )
+
+        # More messy fields
+        pipe.hset(logEntryKey, "request_content", "PLACEHOLDER")
+        pipe.hset(logEntryKey, "response_payload", "PLACEHOLDER")
+
         pipe.execute()
+        # print(fields)
+        # c = input("Continue?   ")
+        # if c != "y":
+        #     exit()
 
 print("Import of {} records completed.".format(count))
