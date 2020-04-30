@@ -18,6 +18,8 @@ print("Importing ...")
 
 count = 0
 
+# Reference app: gitprojects/logbrowser
+
 with open('data/workfile') as f:
 
     # Each row is a logEntry
@@ -32,9 +34,9 @@ with open('data/workfile') as f:
         lst = read_data.split("|")
  
 
-        lst.pop(35)
-        lst.pop(0)
-        lst.pop(30)
+        # lst.pop(35)
+        # lst.pop(0)
+        # lst.pop(30)
         for i in lst:
            # Replace the first ':' character with a '|' to obtain proper k-v split
            j = i.replace(":", "|", 1)
