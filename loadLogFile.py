@@ -1,5 +1,6 @@
 import csv
 import config
+import re
 
 from redis import Redis
 
@@ -32,14 +33,23 @@ with open('data/workfile') as f:
         # Each field is a key-value pair
 
         lst = read_data.split("|")
- 
 
+        # breakpoint()
+
+        # Handle the first field specially
+        i = lst[0]
+        ii = re.sub(r"^", "timestamp|", i, count=1)
+        k, v = ii.split("|")
+        pipe.hset(logEntryKey, k, v )
+
+        # Messy fields
         # lst.pop(35)
-        lst.pop(0)
+        # lst.pop(0)
         # lst.pop(30)
-        for i in lst:
+
+        for i in range(1 , len(lst)):
            # Replace the first ':' character with a '|' to obtain proper k-v split
-           j = i.replace(":", "|", 1)
+           j = lst[i].replace(":", "|", 1)
 
            k, v = j.split("|")
 
