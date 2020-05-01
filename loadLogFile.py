@@ -13,8 +13,6 @@ redis = Redis(db=db, host=host, port=port, password=pwd, charset="utf-8", decode
 # Populate the logEntry hash structures in a server-side batch pipeline
 pipe = redis.pipeline(transaction=False)
 
-# # Import Log files
-# print("Importing ...")
 
 indexValueMaps = {}
 
@@ -42,85 +40,95 @@ class IndexMgr:
 # for i in set:values:<i>
 # logIds = map(lambda x: x.split(":")[1], le)
 
-for i in supportedIndices:
-    indexValueMaps[i] = IndexMgr(i)
-    keys = redis.keys("logEntry:*")
-    # logEntryIds = map(lambda x: x.split(":")[1], keys)
-    for k in keys:
-        # breakpoint()
-        # logEntryId = k.split(":")[1]
-        mappedValue = redis.hget(k, i)
-        indexValueMaps[i].setadd(mappedValue)
-        indexValueMaps[i].add(k, mappedValue)
+def analyzeIndices():
+    for i in supportedIndices:
+        indexValueMaps[i] = IndexMgr(i)
+        keys = redis.keys("logEntry:*")
+        # logEntryIds = map(lambda x: x.split(":")[1], keys)
+        for k in keys:
+            # breakpoint()
+            # logEntryId = k.split(":")[1]
+            mappedValue = redis.hget(k, i)
+            indexValueMaps[i].setadd(mappedValue)
+            indexValueMaps[i].add(k, mappedValue)
 
-    print("{}_source".format(i))
-    if len(indexValueMaps[i].valueMap) > 0:
-        redis.hmset("{}_source".format(i), indexValueMaps[i].valueMap)
-    print("{}_valueSet".format(i))
-    print(str(indexValueMaps[i].valueSet))
-    redis.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
+        # for i in indexValueMaps[i].valueSet:
+        #     val_logEntries = 
 
-breakpoint()
-count = 0
+        print("{} - {}_source".format(len(indexValueMaps[i].valueMap), i))
+        if len(indexValueMaps[i].valueMap) > 0:
+            redis.hmset("{}_source".format(i), indexValueMaps[i].valueMap)
 
-# Reference app: gitprojects/logbrowser
+        print("{} - {}".format(len(indexValueMaps[i].valueSet), str(indexValueMaps[i].valueSet)))
+        redis.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
 
-sourcePath = "./data/"
-sourceFileName = "workfile"
+    # breakpoint()
 
-rawFields = [] #  parsed array of contents within each logentry field (delimited by "|")
-fields = {} #  name{}value pairs for each log entry -- no payloads or other fields with "{}" chars in value
+def loadLogFile():
+    ######################
+    # Import Log files
+    print("Importing ...")
 
+    count = 0
 
-with open(sourcePath+sourceFileName) as f:
+    # Reference app: gitprojects/logbrowser
 
-    # Each row is a logEntry
-    for rawString in f:
-        count = count+1
-        logEntryKey = "logEntry:{}".format(count)
-        print(logEntryKey)
-        # pipe.hset(logEntryKey, "rawString", rawString )
+    sourcePath = "./data/"
+    sourceFileName = "logFile2.log"
 
-        # Split each logEntry into separate fields
-        # Each field is a key-value pair
-
-        rawFields = rawString.split("|")
-        # pipe.hset(logEntryKey, "rawFields", str(rawFields) )
+    rawFields = [] #  parsed array of contents within each logentry field (delimited by "|")
+    fields = {} #  name{}value pairs for each log entry -- no payloads or other fields with "{}" chars in value
 
 
-        # breakpoint()
+    with open(sourcePath+sourceFileName) as f:
 
-        # Handle the first field specially
-        i = rawFields[0]
-        ii = re.sub(r"^", "timestamp|", i, count=1)
-        k, v = ii.split("|")
-        pipe.hset(logEntryKey, k, v )
-        fields[k] =  v
+        # Each row is a logEntry
+        for rawString in f:
+            count = count+1
+            logEntryKey = "logEntry:{}".format(count)
+            print(logEntryKey)
+            # pipe.hset(logEntryKey, "rawString", rawString )
 
-        # Remove Messy fields
-        rawFields.pop(35)
-        # rawFields.pop(0)
-        rawFields.pop(30)
+            # Split each logEntry into separate fields
+            # Each field is a key-value pair
 
-        for i in range(1 , len(rawFields)):
-           # Replace the first ':' character with a '|' to obtain proper k-v split
-           j = rawFields[i].replace(":", "|", 1)
+            rawFields = rawString.split("|")
+            # pipe.hset(logEntryKey, "rawFields", str(rawFields) )
 
-           k, v = j.split("|")
 
-           fields[k] = v
+            # breakpoint()
 
-           # Populate the logEntryKey hash for each logEntry key-value pair
-           pipe.hset(logEntryKey, k, v )
+            # Handle the first field specially
+            i = rawFields[0]
+            ii = re.sub(r"^", "timestamp|", i, count=1)
+            k, v = ii.split("|")
+            pipe.hset(logEntryKey, k, v )
+            fields[k] =  v
 
-        # More messy fields
-        pipe.hset(logEntryKey, "request_content", "PLACEHOLDER")
-        pipe.hset(logEntryKey, "response_payload", "PLACEHOLDER")
+            # Remove Messy fields
+            rawFields.pop(35)
+            # rawFields.pop(0)
+            rawFields.pop(30)
 
-        pipe.execute()
-        # print(fields)
-        # c = input("Continue?   ")
-        # if c != "y":
-        #     exit()
+            for i in range(1 , len(rawFields)):
+               # Replace the first ':' character with a '|' to obtain proper k-v split
+               j = rawFields[i].replace(":", "|", 1)
 
-print("Import of {} records completed.".format(count))
+               k, v = j.split("|")
+
+               fields[k] = v
+
+               # Populate the logEntryKey hash for each logEntry key-value pair
+               pipe.hset(logEntryKey, k, v )
+
+            # More messy fields
+            pipe.hset(logEntryKey, "request_content", "PLACEHOLDER")
+            pipe.hset(logEntryKey, "response_payload", "PLACEHOLDER")
+
+            pipe.execute()
+            # print(fields)
+            # c = input("Continue?   ")
+            # if c != "y":
+            #     exit()
+
+    print("Import of {} records completed.".format(count))
