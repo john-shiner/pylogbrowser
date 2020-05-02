@@ -59,7 +59,7 @@ def createIndexValueMaps():
         # print("{} - {}".format(len(indexValueMaps[i].valueSet), str(indexValueMaps[i].valueSet)))
         redis.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
 
-createIndexValueMaps()
+# createIndexValueMaps()
 
 def analyzeIndices():
     for i in supportedIndices:
@@ -152,3 +152,7 @@ def loadLogFile():
             #     exit()
 
     print("Import of {} records completed.".format(count))
+
+loadLogFile()
+createIndexValueMaps()
+
