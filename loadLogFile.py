@@ -13,7 +13,6 @@ redis = Redis(db=db, host=host, port=port, password=pwd, charset="utf-8", decode
 # Populate the logEntry hash structures in a server-side batch pipeline
 pipe = redis.pipeline(transaction=False)
 
-
 indexValueMaps = {}
 
 supportedIndices = ["client_host", "client_id", "client_ip", \
@@ -32,13 +31,35 @@ class IndexMgr:
     def add(self, logEntryKey, fieldValue):
         self.valueMap[logEntryKey] = str(fieldValue)
 
+def createIndexValueMaps():
+    for i in supportedIndices:
+        indexValueMaps[i] = IndexMgr(i)
 
-# idx:<i>
-# set:values:<i>
-# hash:values:<i>:<valueId>
+        keys = redis.keys("logEntry:*")
+        for k in keys:
+           for rs in redis.hscan_iter(k, match=i, count='100'):
+                # print("type rs={}".format(type(rs)))
+                # print("rs={}".format(rs))
+                # print("rs[0]=indexName={}".format(rs[0]))
+                # print("rs[1]=indexValue={}".format(rs[1]))
+                # breakpoint()
+                indexValueMaps[i].setadd(rs[1])
+                le_index = k.split(":")[1]
+                if rs[1] in indexValueMaps[i].valueMap:
+                    indexValueMaps[i].valueMap[rs[1]].append(le_index)
+                else:
+                    indexValueMaps[i].valueMap[rs[1]]=[]
+                    indexValueMaps[i].valueMap[rs[1]].append(le_index) 
+                    
+        print("{} index with {} values - {}".format(i, len(indexValueMaps[i].valueSet), str(indexValueMaps[i].valueSet)))
 
-# for i in set:values:<i>
-# logIds = map(lambda x: x.split(":")[1], le)
+        for vm in indexValueMaps[i].valueMap:
+            print("        --> value '{}' is referenced by {} logEntries".format(vm, len(vm)))
+
+        # print("{} - {}".format(len(indexValueMaps[i].valueSet), str(indexValueMaps[i].valueSet)))
+        redis.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
+
+createIndexValueMaps()
 
 def analyzeIndices():
     for i in supportedIndices:
@@ -50,14 +71,14 @@ def analyzeIndices():
             # logEntryId = k.split(":")[1]
             mappedValue = redis.hget(k, i)
             indexValueMaps[i].setadd(mappedValue)
-            indexValueMaps[i].add(k, mappedValue)
+            # indexValueMaps[i].add(k, mappedValue)
 
         # for i in indexValueMaps[i].valueSet:
         #     val_logEntries = 
 
-        print("{} - {}_source".format(len(indexValueMaps[i].valueMap), i))
-        if len(indexValueMaps[i].valueMap) > 0:
-            redis.hmset("{}_source".format(i), indexValueMaps[i].valueMap)
+        # print("{} - {}_source".format(len(indexValueMaps[i].valueMap), i))
+        # if len(indexValueMaps[i].valueMap) > 0:
+        #     redis.hmset("{}_source".format(i), indexValueMaps[i].valueMap)
 
         print("{} - {}".format(len(indexValueMaps[i].valueSet), str(indexValueMaps[i].valueSet)))
         redis.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
@@ -78,7 +99,6 @@ def loadLogFile():
 
     rawFields = [] #  parsed array of contents within each logentry field (delimited by "|")
     fields = {} #  name{}value pairs for each log entry -- no payloads or other fields with "{}" chars in value
-
 
     with open(sourcePath+sourceFileName) as f:
 
