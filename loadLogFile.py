@@ -57,33 +57,12 @@ def createIndexValueMaps():
             print("        --> value '{}' is referenced by {} logEntries".format(vm, len(vm)))
 
         # print("{} - {}".format(len(indexValueMaps[i].valueSet), str(indexValueMaps[i].valueSet)))
-        redis.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
+        pipe.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
+        for vm in indexValueMaps[i].valueMap:
+            pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
+        pipe.execute()
 
 # createIndexValueMaps()
-
-def analyzeIndices():
-    for i in supportedIndices:
-        indexValueMaps[i] = IndexMgr(i)
-        keys = redis.keys("logEntry:*")
-        # logEntryIds = map(lambda x: x.split(":")[1], keys)
-        for k in keys:
-            # breakpoint()
-            # logEntryId = k.split(":")[1]
-            mappedValue = redis.hget(k, i)
-            indexValueMaps[i].setadd(mappedValue)
-            # indexValueMaps[i].add(k, mappedValue)
-
-        # for i in indexValueMaps[i].valueSet:
-        #     val_logEntries = 
-
-        # print("{} - {}_source".format(len(indexValueMaps[i].valueMap), i))
-        # if len(indexValueMaps[i].valueMap) > 0:
-        #     redis.hmset("{}_source".format(i), indexValueMaps[i].valueMap)
-
-        print("{} - {}".format(len(indexValueMaps[i].valueSet), str(indexValueMaps[i].valueSet)))
-        redis.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
-
-    # breakpoint()
 
 def loadLogFile():
     ######################
