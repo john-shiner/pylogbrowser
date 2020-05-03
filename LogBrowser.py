@@ -10,7 +10,8 @@ host = config.REDIS_CFG["host"]
 port = config.REDIS_CFG["port"]
 pwd = config.REDIS_CFG["password"]
 db = config.REDIS_CFG["db"]
-redis = Redis(db=db, host=host, port=port, password=pwd, charset="utf-8", decode_responses=True)
+redis = Redis(db=db, host=host, port=port, password=pwd, \
+              charset="utf-8", decode_responses=True)
 
 pipe = redis.pipeline(transaction=False)
 
@@ -20,10 +21,13 @@ indexValueMaps = {}
 logEntryKeys = redis.keys("logEntry:*")
 
 supportedIndices = ["client_host", "client_id", "client_ip", \
-                    "environment", "organization", "proxy", "proxy_basepath", "proxy_name", \
-                    "proxy_revision", "request_path", "request_uri", "request_verb", \
-                    "response_reason_phrase", "response_status_code", "soap_operation", \
-                    "soap_siteId", "target_basepath", "target_host", "target_ip", "virtual_host"]
+                    "environment", "organization", "proxy", \
+                    "proxy_basepath", "proxy_name", \
+                    "proxy_revision", "request_path", "request_uri", \
+                    "request_verb", "response_reason_phrase", \
+                    "response_status_code", "soap_operation", \
+                    "soap_siteId", "target_basepath", "target_host", \
+                    "target_ip", "virtual_host"]
 
 class IndexMgr:
     def __init__(self, fieldName):
@@ -37,8 +41,16 @@ class IndexMgr:
 
 
 def showLogEntry(logEntryKey="1"):
+    print()
+    print("**********************")
+    print()
+
     print("logEntry:"+logEntryKey)
     print(redis.hgetall("logEntry:"+logEntryKey))
+
+    print()
+    print("**********************")
+    print()
 
 def createIndexValueMap(indexName):
     """ Creates a value-to-LogEntry map for the specified indexName"""
@@ -63,11 +75,18 @@ def createIndexValueMap(indexName):
         #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
         # pipe.execute()
 
-def printIndexValueMap(indexName):                    
+def printIndexValueMap(indexName):
+    print()
+    print("**********************")
+    print()
+    
     print("{} index with {} values".format(indexName, len(indexValueMaps[indexName].valueSet)))
 
     for vm in indexValueMaps[indexName].valueMap:
         print("        --> value '{}' is referenced by {} logEntries".format(vm, len(vm)))
+    print()
+    print("**********************")
+    print()
 
 def createAllIndexValueMaps():
     """ Creates a value-to-LogEntry map for the specified indexName"""
@@ -96,12 +115,18 @@ def createAllIndexValueMaps():
             #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
             # pipe.execute()
 
-def printAllIndexValueMaps():                    
+def printAllIndexValueMaps(): 
+    print()
+    print("**********************")
+    print()                   
     print("{} index with {} values".format(indexName, len(indexValueMaps[indexName].valueSet)))
 
     for vm in indexValueMaps[indexName].valueMap:
         print("        --> value '{}' is referenced by {} logEntries".format(vm, len(vm)))
 
+    print()
+    print("**********************")
+    print()
     # pipe.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
     # for vm in indexValueMaps[i].valueMap:
     #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
@@ -120,9 +145,13 @@ def loadLogFile():
     sourcePath = "./data/"
     sourceFileName = "logFile2.log"
 
-    rawFields = [] #  parsed array of contents within each logentry field (delimited by "|")
-    fields = {} #  name{}value pairs for each log entry -- no payloads or other fields with "{}" chars in value
+    #  parsed array of contents within each logentry field (delimited by "|")
+    rawFields = [] 
 
+    #  name{}value pairs for each log entry -- 
+    #  no payloads or other fields with "{}" chars in value
+    
+    fields = {} 
     with open(sourcePath+sourceFileName) as f:
 
         # Each row is a logEntry
