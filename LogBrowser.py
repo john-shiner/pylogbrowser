@@ -43,12 +43,11 @@ class IndexMgr:
 def showLogEntry(logEntryKey="1"):
     print()
     print("**********************")
-    print()
-
     print("logEntry:"+logEntryKey)
-    print(redis.hgetall("logEntry:"+logEntryKey))
-
-    print()
+    # print(redis.hgetall("logEntry:"+logEntryKey))
+    fieldValues = redis.hgetall("logEntry:"+logEntryKey)
+    for i in fieldValues.keys():
+        print("     {} : {}".format(i, fieldValues[i]))
     print("**********************")
     print()
 
@@ -183,7 +182,7 @@ def loadLogFile():
             # Split each logEntry into separate fields
             # Each field is a key-value pair
 
-            rawFields = rawString.split("|")
+            rawFields = rawString.strip().split("|")
             # pipe.hset(logEntryKey, "rawFields", str(rawFields) )
 
 
@@ -195,19 +194,20 @@ def loadLogFile():
             k, v = ii.split("|")
             pipe.hset(logEntryKey, k, v )
             fields[k] =  v
-
+            print(k,v)
+            # breakpoint()
             # Remove Messy fields
             rawFields.pop(35)
             # rawFields.pop(0)
-            rawFields.pop(30)
+            rawFields.pop(31)
 
             for i in range(1 , len(rawFields)):
                # Replace the first ':' character with a '|' to obtain proper k-v split
                j = rawFields[i].replace(":", "|", 1)
-
+               jj = j.replace(":", "-")
                k, v = j.split("|")
 
-               fields[k] = v
+               fields[k] = v.strip()
 
                # Populate the logEntryKey hash for each logEntry key-value pair
                pipe.hset(logEntryKey, k, v )
@@ -255,3 +255,4 @@ def menu():
 # printIndexValueMap("target_basepath")
 # printAllIndexValueMaps()
 
+loadLogFile()

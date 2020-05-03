@@ -14,25 +14,11 @@ inv_path = output.strip()
 
 os.environ["INV_PATH"]=inv_path
 
-# redis_depl = "$INV_PATH/k8s/redis-deployment.yml"
-# redis_svc = "$INV_PATH/k8s/redis-service.yml"
-# web_depl = "$INV_PATH/k8s/web-flask-deployment.yml"
-# web_svc = "$INV_PATH/k8s/web-flask-service.yml"
-# tasks_log = "$INV_PATH/k8s/log.txt"
-
 supportedIndices = LB.supportedIndices
-
-# supportedIndices = ["client_host", "client_id", "client_ip", \
-#                     "environment", "organization", "proxy", \
-#                     "proxy_basepath", "proxy_name", \
-#                     "proxy_revision", "request_path", "request_uri", \
-#                     "request_verb", "response_reason_phrase", \
-#                     "response_status_code", "soap_operation", \
-#                     "soap_siteId", "target_basepath", "target_host", \
-#                     "target_ip", "virtual_host"]
 
 @task
 def browseIndex(c):
+    "Interactive menu to show numeric analysis for the values in each Log Entry field"
     q = 0
     while (q == 0):
         for num, indexName in enumerate(supportedIndices):
@@ -51,6 +37,7 @@ def browseIndex(c):
 
 @task
 def showLogEntry(c, logEntryId = "1"):
+    "Show the Log Entry field values for a specified logEntryId"
     logEntryId = input("Enter Log Entry ID:   ")
     LB.showLogEntry(logEntryId)
 
