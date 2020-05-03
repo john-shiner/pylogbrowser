@@ -88,11 +88,29 @@ def printIndexValueMap(indexName):
     print("**********************")
     print()
 
+def printIndexValueLogEntries(indexName):
+    print()
+    print("**********************")
+    print()
+    
+    print("{} index with {} values".format(indexName, len(indexValueMaps[indexName].valueSet)))
+
+    for vm in indexValueMaps[indexName].valueMap:
+        print("        --> value '{}' is referenced by {} logEntries".format(vm, len(vm)))
+
+    # breakpoint()
+
+    for k in indexValueMaps[indexName].valueMap.keys():
+        print("Value:   {}".format(k))
+        print(indexValueMaps[indexName].valueMap[k])
+    print()
+    print("**********************")
+    print()
+
 def createAllIndexValueMaps():
     """ Creates a value-to-LogEntry map for the specified indexName"""
 
     for indexName in supportedIndices:
-        indexValueMaps[indexName] = IndexMgr(indexName)
 
         if indexName not in indexValueMaps:
             indexValueMaps[indexName] = IndexMgr(indexName)
@@ -116,21 +134,22 @@ def createAllIndexValueMaps():
             # pipe.execute()
 
 def printAllIndexValueMaps(): 
-    print()
-    print("**********************")
-    print()                   
-    print("{} index with {} values".format(indexName, len(indexValueMaps[indexName].valueSet)))
+    for indexName in supportedIndices:
+        print()
+        print("**********************")
+        print()                   
+        print("{} index with {} values".format(indexName, len(indexValueMaps[indexName].valueSet)))
 
-    for vm in indexValueMaps[indexName].valueMap:
-        print("        --> value '{}' is referenced by {} logEntries".format(vm, len(vm)))
+        for vm in indexValueMaps[indexName].valueMap:
+            print("        --> value '{}' is referenced by {} logEntries".format(vm, len(vm)))
 
-    print()
-    print("**********************")
-    print()
-    # pipe.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
-    # for vm in indexValueMaps[i].valueMap:
-    #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
-    # pipe.execute()
+        print()
+        print("**********************")
+        print()
+        # pipe.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
+        # for vm in indexValueMaps[i].valueMap:
+        #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
+        # pipe.execute()
 
 
 def loadLogFile():
@@ -229,4 +248,10 @@ def menu():
         # createIndexValueMap("target_basepath")
         # showLogEntry()
 
-menu()
+# menu()
+# createAllIndexValueMaps()
+# printIndexValueMap("target_basepath")
+# printIndexValueLogEntries("target_basepath")
+# printIndexValueMap("target_basepath")
+# printAllIndexValueMaps()
+

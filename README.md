@@ -1,5 +1,11 @@
 # Minimal app with docker-compose, k8s, python3, flask, redis
 
+Updating base demo app to using redis to support web log analysis
+
+Todos:
+* map LogBrowser capabilities to view templates
+* views:  LogEntry Browser, Log Field value distribution, Admin (view/set source files, etc.)
+
 app.py == minimal python flask/redis web app
 
 To check code quality locally, you can run flake in a container:
@@ -27,7 +33,7 @@ Open/refresh http://localhost:8000 to see the app
 
 ### Minikube deployment commands (run from k8s directory)
 
-Invoke (inv) commands
+Invoke (inv) commands (to evolve)
 
 *  dash       - Run this to launch the minikube dashboard
 *  db         - Output of this command is a parameterized Redis-cli command string
