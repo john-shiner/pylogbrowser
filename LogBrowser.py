@@ -41,16 +41,14 @@ def showLogEntry(logEntryKey="1"):
     print(redis.hgetall("logEntry:"+logEntryKey))
 
 def createIndexValueMap(indexName):
+    """ Creates a value-to-LogEntry map for the specified indexName"""
     if indexName not in indexValueMaps:
         indexValueMaps[indexName] = IndexMgr(indexName)
 
         for k in logEntryKeys:
            for rs in redis.hscan_iter(k, match=indexName, count='100'):
-                # print("type rs={}".format(type(rs)))
-                # print("rs={}".format(rs))
                 # print("rs[0]=indexName={}".format(rs[0]))
                 # print("rs[1]=indexValue={}".format(rs[1]))
-                # breakpoint()
                 indexValueMaps[indexName].setadd(rs[1])
                 le_index = k.split(":")[1]
                 if rs[1] in indexValueMaps[indexName].valueMap:
@@ -58,7 +56,47 @@ def createIndexValueMap(indexName):
                 else:
                     indexValueMaps[indexName].valueMap[rs[1]]=[]
                     indexValueMaps[indexName].valueMap[rs[1]].append(le_index) 
-                    
+
+    ## If desired, uncomment to persist the valueMap for indexName
+    # pipe.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
+        # for vm in indexValueMaps[i].valueMap:
+        #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
+        # pipe.execute()
+
+def printIndexValueMap(indexName):                    
+    print("{} index with {} values".format(indexName, len(indexValueMaps[indexName].valueSet)))
+
+    for vm in indexValueMaps[indexName].valueMap:
+        print("        --> value '{}' is referenced by {} logEntries".format(vm, len(vm)))
+
+def createAllIndexValueMaps():
+    """ Creates a value-to-LogEntry map for the specified indexName"""
+
+    for indexName in supportedIndices:
+        indexValueMaps[indexName] = IndexMgr(indexName)
+
+        if indexName not in indexValueMaps:
+            indexValueMaps[indexName] = IndexMgr(indexName)
+
+            for k in logEntryKeys:
+               for rs in redis.hscan_iter(k, match=indexName, count='100'):
+                    # print("rs[0]=indexName={}".format(rs[0]))
+                    # print("rs[1]=indexValue={}".format(rs[1]))
+                    indexValueMaps[indexName].setadd(rs[1])
+                    le_index = k.split(":")[1]
+                    if rs[1] in indexValueMaps[indexName].valueMap:
+                        indexValueMaps[indexName].valueMap[rs[1]].append(le_index)
+                    else:
+                        indexValueMaps[indexName].valueMap[rs[1]]=[]
+                        indexValueMaps[indexName].valueMap[rs[1]].append(le_index) 
+
+            ## If desired, uncomment to persist the valueMap for indexName
+            # pipe.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
+            # for vm in indexValueMaps[i].valueMap:
+            #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
+            # pipe.execute()
+
+def printAllIndexValueMaps():                    
     print("{} index with {} values".format(indexName, len(indexValueMaps[indexName].valueSet)))
 
     for vm in indexValueMaps[indexName].valueMap:
@@ -68,10 +106,7 @@ def createIndexValueMap(indexName):
     # for vm in indexValueMaps[i].valueMap:
     #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
     # pipe.execute()
-for i in supportedIndices:
-    print(i)
-createIndexValueMap("target_basepath")
-showLogEntry()
+
 
 def loadLogFile():
     ######################
@@ -140,3 +175,29 @@ def loadLogFile():
             #     exit()
 
     print("Import of {} records completed.".format(count))
+
+def menu():
+    while (1):
+        for num, indexName in enumerate(supportedIndices):
+            print(num, indexName)
+        le = num + 1
+        print(le, "ShowLogEntry")
+        q = le + 1
+        print(q, "Quit")
+        idx = input("Select indexName's number to view a value analysis:   ")
+        if str(idx) == 'q':
+            exit()
+        elif idx == str(q):
+            exit()
+        else:
+            if int(idx) == le:
+                le_idx = input("Enter Log Entry ID:   ")
+                showLogEntry(le_idx)
+            else:
+                createIndexValueMap(supportedIndices[int(idx)])
+                printIndexValueMap((supportedIndices[int(idx)]))
+
+        # createIndexValueMap("target_basepath")
+        # showLogEntry()
+
+menu()
