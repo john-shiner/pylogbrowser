@@ -1,33 +1,19 @@
-
-import config
 import re
-
+import config
 from redis import Redis
 
-# Database Connection
-# Database Connection
 host = config.REDIS_CFG["host"]
 port = config.REDIS_CFG["port"]
 pwd = config.REDIS_CFG["password"]
 db = config.REDIS_CFG["db"]
-redis = Redis(db=db, host=host, port=port, password=pwd, \
+redis = Redis(db=db, host=host, port=port, password=pwd,
               charset="utf-8", decode_responses=True)
 
-pipe = redis.pipeline(transaction=False)
 
-# Store for index-value-logEntry maps as they are created
-indexValueMaps = {}
+# redis = Redis(host="redis", charset="utf-8", decode_responses=True)
+pipe = redis.pipeline()
 
-logEntryKeys = redis.keys("logEntry:*")
-
-supportedIndices = ["client_host", "client_id", "client_ip", \
-                    "environment", "organization", "proxy", \
-                    "proxy_basepath", "proxy_name", \
-                    "proxy_revision", "request_path", "request_uri", \
-                    "request_verb", "response_reason_phrase", \
-                    "response_status_code", "soap_operation", \
-                    "soap_siteId", "target_basepath", "target_host", \
-                    "target_ip", "virtual_host"]
+# logEntryKeys = redis.keys("logEntry:*")
 
 class IndexMgr:
     def __init__(self, fieldName):
@@ -39,78 +25,36 @@ class IndexMgr:
     def add(self, logEntryKey, fieldValue):
         self.valueMap[logEntryKey] = str(fieldValue)
 
+# class LogBrowser(redisInstance):
+#     redis = redisInstance
 
-def showLogEntry(logEntryKey="1"):
-    print()
-    print("**********************")
-    print("logEntry:"+logEntryKey)
-    # print(redis.hgetall("logEntry:"+logEntryKey))
-    fieldValues = redis.hgetall("logEntry:"+logEntryKey)
-    for i in fieldValues.keys():
-        print("     {} : {}".format(i, fieldValues[i]))
-    print("**********************")
-    print()
+class LogBrowser:
 
-def createIndexValueMap(indexName):
-    """ Creates a value-to-LogEntry map for the specified indexName"""
-    if indexName not in indexValueMaps:
-        indexValueMaps[indexName] = IndexMgr(indexName)
+    # Store for index-value-logEntry maps as they are created
+    indexValueMaps = {}
 
-        for k in logEntryKeys:
-           for rs in redis.hscan_iter(k, match=indexName, count='100'):
-                # print("rs[0]=indexName={}".format(rs[0]))
-                # print("rs[1]=indexValue={}".format(rs[1]))
-                indexValueMaps[indexName].setadd(rs[1])
-                le_index = k.split(":")[1]
-                if rs[1] in indexValueMaps[indexName].valueMap:
-                    indexValueMaps[indexName].valueMap[rs[1]].append(le_index)
-                else:
-                    indexValueMaps[indexName].valueMap[rs[1]]=[]
-                    indexValueMaps[indexName].valueMap[rs[1]].append(le_index) 
+    supportedIndices = ["client_host", "client_id", "client_ip", \
+                        "environment", "organization", "proxy", \
+                        "proxy_basepath", "proxy_name", \
+                        "proxy_revision", "request_path", "request_uri", \
+                        "request_verb", "response_reason_phrase", \
+                        "response_status_code", "soap_operation", \
+                        "soap_siteId", "target_basepath", "target_host", \
+                        "target_ip", "virtual_host"]
 
-    ## If desired, uncomment to persist the valueMap for indexName
-    # pipe.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
-        # for vm in indexValueMaps[i].valueMap:
-        #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
-        # pipe.execute()
+    def showLogEntry(self, logEntryKey="1"):
+        print()
+        print("**********************")
+        print("logEntry:"+logEntryKey)
+        # print(redis.hgetall("logEntry:"+logEntryKey))
+        fieldValues = redis.hgetall("logEntry:"+logEntryKey)
+        for i in fieldValues.keys():
+            print("     {} : {}".format(i, fieldValues[i]))
+        print("**********************")
+        print()
 
-def printIndexValueMap(indexName):
-    print()
-    print("**********************")
-    print()
-    
-    print("{} index with {} values".format(indexName, len(indexValueMaps[indexName].valueSet)))
-
-    for vm in indexValueMaps[indexName].valueMap:
-        print("        --> value '{}' is referenced by {} logEntries".format(vm, len(vm)))
-    print()
-    print("**********************")
-    print()
-
-def printIndexValueLogEntries(indexName):
-    print()
-    print("**********************")
-    print()
-    
-    print("{} index with {} values".format(indexName, len(indexValueMaps[indexName].valueSet)))
-
-    for vm in indexValueMaps[indexName].valueMap:
-        print("        --> value '{}' is referenced by {} logEntries".format(vm, len(vm)))
-
-    # breakpoint()
-
-    for k in indexValueMaps[indexName].valueMap.keys():
-        print("Value:   {}".format(k))
-        print(indexValueMaps[indexName].valueMap[k])
-    print()
-    print("**********************")
-    print()
-
-def createAllIndexValueMaps():
-    """ Creates a value-to-LogEntry map for the specified indexName"""
-
-    for indexName in supportedIndices:
-
+    def createIndexValueMap(self, indexName):
+        """ Creates a value-to-LogEntry map for the specified indexName"""
         if indexName not in indexValueMaps:
             indexValueMaps[indexName] = IndexMgr(indexName)
 
@@ -126,133 +70,183 @@ def createAllIndexValueMaps():
                         indexValueMaps[indexName].valueMap[rs[1]]=[]
                         indexValueMaps[indexName].valueMap[rs[1]].append(le_index) 
 
-            ## If desired, uncomment to persist the valueMap for indexName
-            # pipe.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
+        ## If desired, uncomment to persist the valueMap for indexName
+        # pipe.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
             # for vm in indexValueMaps[i].valueMap:
             #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
             # pipe.execute()
 
-def printAllIndexValueMaps(): 
-    for indexName in supportedIndices:
+    def printIndexValueMap(self, indexName):
         print()
         print("**********************")
-        print()                   
+        print()
+        
+        print("{} index with {} values".format(indexName, len(indexValueMaps[indexName].valueSet)))
+
+        for vm in indexValueMaps[indexName].valueMap:
+            print("        --> value '{}' is referenced by {} logEntries".format(vm, len(vm)))
+        print()
+        print("**********************")
+        print()
+
+    def printIndexValueLogEntries(self, indexName):
+        print()
+        print("**********************")
+        print()
+        
         print("{} index with {} values".format(indexName, len(indexValueMaps[indexName].valueSet)))
 
         for vm in indexValueMaps[indexName].valueMap:
             print("        --> value '{}' is referenced by {} logEntries".format(vm, len(vm)))
 
+        # breakpoint()
+
+        for k in indexValueMaps[indexName].valueMap.keys():
+            print("Value:   {}".format(k))
+            print(indexValueMaps[indexName].valueMap[k])
         print()
         print("**********************")
         print()
-        # pipe.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
-        # for vm in indexValueMaps[i].valueMap:
-        #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
-        # pipe.execute()
+
+    def createAllIndexValueMaps(self):
+        """ Creates a value-to-LogEntry map for the specified indexName"""
+
+        for indexName in supportedIndices:
+
+            if indexName not in indexValueMaps:
+                indexValueMaps[indexName] = IndexMgr(indexName)
+
+                for k in logEntryKeys:
+                   for rs in redis.hscan_iter(k, match=indexName, count='100'):
+                        # print("rs[0]=indexName={}".format(rs[0]))
+                        # print("rs[1]=indexValue={}".format(rs[1]))
+                        indexValueMaps[indexName].setadd(rs[1])
+                        le_index = k.split(":")[1]
+                        if rs[1] in indexValueMaps[indexName].valueMap:
+                            indexValueMaps[indexName].valueMap[rs[1]].append(le_index)
+                        else:
+                            indexValueMaps[indexName].valueMap[rs[1]]=[]
+                            indexValueMaps[indexName].valueMap[rs[1]].append(le_index) 
+
+                ## If desired, uncomment to persist the valueMap for indexName
+                # pipe.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
+                # for vm in indexValueMaps[i].valueMap:
+                #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
+                # pipe.execute()
+
+    def printAllIndexValueMaps(self): 
+        for indexName in supportedIndices:
+            print()
+            print("**********************")
+            print()                   
+            print("{} index with {} values".format(indexName, len(indexValueMaps[indexName].valueSet)))
+
+            for vm in indexValueMaps[indexName].valueMap:
+                print("        --> value '{}' is referenced by {} logEntries".format(vm, len(vm)))
+
+            print()
+            print("**********************")
+            print()
+            # pipe.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
+            # for vm in indexValueMaps[i].valueMap:
+            #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
+            # pipe.execute()
 
 
-def loadLogFile():
-    ######################
-    # Import Log files
-    print("Importing ...")
+    def loadLogFile(self):
+        ######################
+        # Import Log files
+        print("Importing ...")
 
-    count = 0
+        count = 0
 
-    # Reference app: gitprojects/logbrowser
+        # Reference app: gitprojects/logbrowser
 
-    sourcePath = "./data/"
-    sourceFileName = "logFile2.log"
+        sourcePath = "./data/"
+        sourceFileName = "logFile2.log"
 
-    #  parsed array of contents within each logentry field (delimited by "|")
-    rawFields = [] 
+        #  parsed array of contents within each logentry field (delimited by "|")
+        rawFields = [] 
 
-    #  name{}value pairs for each log entry -- 
-    #  no payloads or other fields with "{}" chars in value
-    
-    fields = {} 
-    with open(sourcePath+sourceFileName) as f:
+        #  name{}value pairs for each log entry -- 
+        #  no payloads or other fields with "{}" chars in value
+        
+        fields = {} 
+        with open(sourcePath+sourceFileName) as f:
 
-        # Each row is a logEntry
-        for rawString in f:
-            count = count+1
-            logEntryKey = "logEntry:{}".format(count)
-            print(logEntryKey)
-            # pipe.hset(logEntryKey, "rawString", rawString )
+            # Each row is a logEntry
+            for rawString in f:
+                count = count+1
+                logEntryKey = "logEntry:{}".format(count)
+                # print(logEntryKey)
 
-            # Split each logEntry into separate fields
-            # Each field is a key-value pair
+                # Split each logEntry into separate fields
+                # Each field is a key-value pair
 
-            rawFields = rawString.strip().split("|")
-            # pipe.hset(logEntryKey, "rawFields", str(rawFields) )
+                rawFields = rawString.strip().split("|")
+                # pipe.hset(logEntryKey, "rawFields", str(rawFields) )
 
+                # Handle the first field specially
+                i = rawFields[0]
+                ii = re.sub(r"^", "timestamp|", i, count=1)
+                k, v = ii.split("|")
+                pipe.hset(logEntryKey, k, v )
+                fields[k] =  v
+                # print(k,v)
 
-            # breakpoint()
+                # Remove Messy fields
+                rawFields.pop(35)
+                # rawFields.pop(0)
+                rawFields.pop(31)
 
-            # Handle the first field specially
-            i = rawFields[0]
-            ii = re.sub(r"^", "timestamp|", i, count=1)
-            k, v = ii.split("|")
-            pipe.hset(logEntryKey, k, v )
-            fields[k] =  v
-            print(k,v)
-            # breakpoint()
-            # Remove Messy fields
-            rawFields.pop(35)
-            # rawFields.pop(0)
-            rawFields.pop(31)
+                for i in range(1 , len(rawFields)):
+                   # Replace the first ':' character with a '|' to obtain proper k-v split
+                   j = rawFields[i].replace(":", "|", 1)
+                   jj = j.replace(":", "-")
+                   k, v = j.split("|")
 
-            for i in range(1 , len(rawFields)):
-               # Replace the first ':' character with a '|' to obtain proper k-v split
-               j = rawFields[i].replace(":", "|", 1)
-               jj = j.replace(":", "-")
-               k, v = j.split("|")
+                   fields[k] = v.strip()
 
-               fields[k] = v.strip()
+                   # Populate the logEntryKey hash for each logEntry key-value pair
+                   pipe.hset(logEntryKey, k, v )
 
-               # Populate the logEntryKey hash for each logEntry key-value pair
-               pipe.hset(logEntryKey, k, v )
+                # More messy fields
+                pipe.hset(logEntryKey, "request_content", "PLACEHOLDER")
+                pipe.hset(logEntryKey, "response_payload", "PLACEHOLDER")
 
-            # More messy fields
-            pipe.hset(logEntryKey, "request_content", "PLACEHOLDER")
-            pipe.hset(logEntryKey, "response_payload", "PLACEHOLDER")
+                pipe.execute()
 
-            pipe.execute()
-            # print(fields)
-            # c = input("Continue?   ")
-            # if c != "y":
-            #     exit()
+        print("Import of {} records completed.".format(count))
 
-    print("Import of {} records completed.".format(count))
-
-def menu():
-    while (1):
-        for num, indexName in enumerate(supportedIndices):
-            print(num, indexName)
-        le = num + 1
-        print(le, "ShowLogEntry")
-        q = le + 1
-        print(q, "Quit")
-        idx = input("Select indexName's number to view a value analysis:   ")
-        if str(idx) == 'q':
-            exit()
-        elif idx == str(q):
-            exit()
-        else:
-            if int(idx) == le:
-                le_idx = input("Enter Log Entry ID:   ")
-                showLogEntry(le_idx)
+    def menu(self):
+        while (1):
+            for num, indexName in enumerate(supportedIndices):
+                print(num, indexName)
+            le = num + 1
+            print(le, "ShowLogEntry")
+            q = le + 1
+            print(q, "Quit")
+            idx = input("Select indexName's number to view a value analysis:   ")
+            if str(idx) == 'q':
+                exit()
+            elif idx == str(q):
+                exit()
             else:
-                createIndexValueMap(supportedIndices[int(idx)])
-                printIndexValueMap((supportedIndices[int(idx)]))
+                if int(idx) == le:
+                    le_idx = input("Enter Log Entry ID:   ")
+                    showLogEntry(le_idx)
+                else:
+                    createIndexValueMap(supportedIndices[int(idx)])
+                    printIndexValueMap((supportedIndices[int(idx)]))
 
-        # createIndexValueMap("target_basepath")
-        # showLogEntry()
+            # createIndexValueMap("target_basepath")
+            # showLogEntry()
 
-# menu()
-# createAllIndexValueMaps()
-# printIndexValueMap("target_basepath")
-# printIndexValueLogEntries("target_basepath")
-# printIndexValueMap("target_basepath")
-# printAllIndexValueMaps()
+    # menu()
+    # createAllIndexValueMaps()
+    # printIndexValueMap("target_basepath")
+    # printIndexValueLogEntries("target_basepath")
+    # printIndexValueMap("target_basepath")
+    # printAllIndexValueMaps()
 
-loadLogFile()
+    # loadLogFile()

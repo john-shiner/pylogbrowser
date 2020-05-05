@@ -8,17 +8,18 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 
-# # For future use
-# from config import config
-# from ent_config import config
+from LogBrowser import LogBrowser as LB
+from LogBrowser import redis
 
-# Database Connection
-# host = config.REDIS_CFG["host"]
-# port = config.REDIS_CFG["port"]
-# pwd = config.REDIS_CFG["password"]
-# db = config.REDIS_CFG["db"]
-# redis = Redis(db=db, host=host, port=port, password=pwd,
-#               charset="utf-8", decode_responses=True)
+# menu()
+# createAllIndexValueMaps()
+# printIndexValueMap("target_basepath")
+# printIndexValueLogEntries("target_basepath")
+# printIndexValueMap("target_basepath")
+# printAllIndexValueMaps()
+
+# loadLogFile()
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'hard to guess string'
@@ -26,15 +27,17 @@ app.config['SECRET_KEY'] = 'hard to guess string'
 bootstrap = Bootstrap(app)
 moment = Moment(app)
 
-TITLE = "SiteMap Concepts"
+TITLE = "Web Log Browser"
 DESC = "Redis Modeling Demo"
-status = "All is well... truly"
+status = "Status - so far so good"
 
-redis = Redis(host="redis", charset="utf-8", decode_responses=True)
+# redis = LB.redis
 
+lb = LB()
+# lb.loadLogFile()
 
-class NameForm(FlaskForm):
-    name = StringField('What is your name?', validators=[DataRequired()])
+class AdminForm(FlaskForm):
+    # name = StringField('What is your name?', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
 
@@ -57,18 +60,19 @@ def index():
                            title=TITLE, desc=DESC, status=status)
 
 
-@app.route('/hello', methods=['GET', 'POST'])
-def hello():
-    form = NameForm()
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+    form = AdminForm()
     if form.validate_on_submit():
-        session['name'] = form.name.data
+        # session['name'] = form.name.data   # store/load loaded Files from redis
         return redirect(url_for('hello'))
-    DESC = "Flask Form Demo"
-    status = "Name, if submitted is stored in a session variable"
+    DESC = "Manage LogBrowser Settings"
+    status = "Status to be updated"
 
-    return render_template('hello.html', form=form, name=session.get('name'),
+    # return render_template('admin.html', form=form, name=session.get('name'),
+    #                        title=TITLE, desc=DESC, status=status)
+    return render_template('admin.html', form=form, 
                            title=TITLE, desc=DESC, status=status)
-
 
 @app.route("/db/info")
 def dbinfo():
@@ -76,6 +80,7 @@ def dbinfo():
     TITLE = "Database Info"
     DESC = "Redis Server Instance Information"
     items = []
+
     try:
         result = redis.info()
         for k in result:
@@ -88,7 +93,6 @@ def dbinfo():
     except RedisError as err:
         return render_template('dbinfo.html', title=TITLE,
                                desc=DESC, error=err)
-
 
 @app.route("/db/test")
 def dbtest():
@@ -103,7 +107,6 @@ def dbtest():
     except RedisError as err:
         return render_template('dbtest.html', title=TITLE,
                                desc=DESC, error=err)
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)

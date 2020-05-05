@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>Data source path: !</h1>
+    <h1>Log files loaded:!</h1>
+</div>
+{{ wtf.quick_form(form) }}
+{% endblock %}
+
+<!-- jinja2.exceptions.TemplateSyntaxError: Encountered unknown tag 'sourcePath'. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'. -->
