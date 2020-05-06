@@ -1,7 +1,9 @@
 from flask import Flask
 from redis import Redis, RedisError
 
-from flask import render_template, session, redirect, url_for
+
+
+from flask import render_template, session, redirect, url_for, Markup
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_wtf import FlaskForm
@@ -60,18 +62,23 @@ def index():
                            title=TITLE, desc=DESC, status=status)
 
 
-@app.route('/admin', methods=['GET', 'POST'])
-def admin():
-    form = AdminForm()
-    if form.validate_on_submit():
-        # session['name'] = form.name.data   # store/load loaded Files from redis
-        return redirect(url_for('hello'))
-    DESC = "Manage LogBrowser Settings"
-    status = "Status to be updated"
+@app.route('/analysis', methods=['GET', 'POST'])
+def analysis():
 
-    # return render_template('admin.html', form=form, name=session.get('name'),
-    #                        title=TITLE, desc=DESC, status=status)
-    return render_template('admin.html', form=form, 
+    DESC = "Summary Value Mappings across Log Entries"
+    status = "Ok"
+
+    # page_content = lb.printAllIndexValueMaps()
+    page_content = ""
+    for i in lb.indexValueMaps.keys():
+        page_content +="<h3>{}</h3>".format(i)
+        page_content +="<UL>"
+        for j in lb.indexValueMaps[i].valueSet:
+            page_content += "<li>Value '{}' mapped to {} logEntries</li>".format(j, len(lb.indexValueMaps[i].valueMap))
+        page_content +="</UL>"
+
+    # print(page_content)
+    return render_template("analysis.html", page_content = Markup(page_content),
                            title=TITLE, desc=DESC, status=status)
 
 @app.route("/db/info")

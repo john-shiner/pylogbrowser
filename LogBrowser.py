@@ -2,15 +2,17 @@ import re
 import config
 from redis import Redis
 
-host = config.REDIS_CFG["host"]
-port = config.REDIS_CFG["port"]
-pwd = config.REDIS_CFG["password"]
-db = config.REDIS_CFG["db"]
+# Desktop
+host = config.REDIS_DESKTOP["host"]
+port = config.REDIS_DESKTOP["port"]
+pwd = config.REDIS_DESKTOP["password"]
+db = config.REDIS_DESKTOP["db"]
 redis = Redis(db=db, host=host, port=port, password=pwd,
               charset="utf-8", decode_responses=True)
 
-
+# # Kubernetes Deployment
 # redis = Redis(host="redis", charset="utf-8", decode_responses=True)
+
 pipe = redis.pipeline()
 
 # logEntryKeys = redis.keys("logEntry:*")
@@ -29,9 +31,21 @@ class IndexMgr:
 #     redis = redisInstance
 
 class LogBrowser:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls, *args, **kwargs)
+            cls._instance.logEntryKeys = redis.keys("logEntry:*")
+            if len(cls._instance.logEntryKeys) == 0:
+                cls._instance.loadLogFile()
+                cls._instance.logEntryKeys = redis.keys("logEntry:*")
+            cls._instance.createAllIndexValueMaps()
+        return cls._instance
 
     # Store for index-value-logEntry maps as they are created
     indexValueMaps = {}
+    logEntryKeys = []
 
     supportedIndices = ["client_host", "client_id", "client_ip", \
                         "environment", "organization", "proxy", \
@@ -41,6 +55,8 @@ class LogBrowser:
                         "response_status_code", "soap_operation", \
                         "soap_siteId", "target_basepath", "target_host", \
                         "target_ip", "virtual_host"]
+
+
 
     def showLogEntry(self, logEntryKey="1"):
         print()
@@ -111,22 +127,22 @@ class LogBrowser:
     def createAllIndexValueMaps(self):
         """ Creates a value-to-LogEntry map for the specified indexName"""
 
-        for indexName in supportedIndices:
+        for indexName in self.supportedIndices:
 
-            if indexName not in indexValueMaps:
-                indexValueMaps[indexName] = IndexMgr(indexName)
+            if indexName not in self.indexValueMaps:
+                self.indexValueMaps[indexName] = IndexMgr(indexName)
 
-                for k in logEntryKeys:
+                for k in self.logEntryKeys:
                    for rs in redis.hscan_iter(k, match=indexName, count='100'):
                         # print("rs[0]=indexName={}".format(rs[0]))
                         # print("rs[1]=indexValue={}".format(rs[1]))
-                        indexValueMaps[indexName].setadd(rs[1])
+                        self.indexValueMaps[indexName].setadd(rs[1])
                         le_index = k.split(":")[1]
-                        if rs[1] in indexValueMaps[indexName].valueMap:
-                            indexValueMaps[indexName].valueMap[rs[1]].append(le_index)
+                        if rs[1] in self.indexValueMaps[indexName].valueMap:
+                            self.indexValueMaps[indexName].valueMap[rs[1]].append(le_index)
                         else:
-                            indexValueMaps[indexName].valueMap[rs[1]]=[]
-                            indexValueMaps[indexName].valueMap[rs[1]].append(le_index) 
+                            self.indexValueMaps[indexName].valueMap[rs[1]]=[]
+                            self.indexValueMaps[indexName].valueMap[rs[1]].append(le_index) 
 
                 ## If desired, uncomment to persist the valueMap for indexName
                 # pipe.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
@@ -134,7 +150,7 @@ class LogBrowser:
                 #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
                 # pipe.execute()
 
-    def printAllIndexValueMaps(self): 
+    def _orig_printAllIndexValueMaps(self): 
         for indexName in supportedIndices:
             print()
             print("**********************")
@@ -151,6 +167,16 @@ class LogBrowser:
             # for vm in indexValueMaps[i].valueMap:
             #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
             # pipe.execute()
+
+    def printAllIndexValueMaps(self): 
+        content = ""
+        for indexName in self.supportedIndices:
+            content += "<br/>"
+            content += "{} index with {} values".format(indexName, len(self.indexValueMaps[indexName].valueSet))
+            content += "<br/>"
+            for vm in self.indexValueMaps[indexName].valueMap:
+                content += "<p>        --> value '{}' is referenced by {} logEntries</p>".format(vm, len(vm))
+            content += "<br/>"
 
 
     def loadLogFile(self):
@@ -243,7 +269,6 @@ class LogBrowser:
             # showLogEntry()
 
     # menu()
-    # createAllIndexValueMaps()
     # printIndexValueMap("target_basepath")
     # printIndexValueLogEntries("target_basepath")
     # printIndexValueMap("target_basepath")

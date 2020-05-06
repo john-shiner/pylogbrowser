@@ -44,8 +44,8 @@ def deploy(c):
     #                             --dry-run --output=yaml > new-redis-service.yaml
 
     # redis_depl
-    c.run("kubectl create -f {}".format(redis_depl))
-    c.run("kubectl create -f {}".format(redis_svc))
+    # c.run("kubectl create -f {}".format(redis_depl))
+    # c.run("kubectl create -f {}".format(redis_svc))
     c.run("kubectl create -f {}".format(web_depl))
     c.run("kubectl create -f {}".format(web_svc))
 
@@ -58,12 +58,15 @@ def deploy(c):
 @task 
 def undeploy(c):
     "Run this to remove (all) the application stack(s) from minikube"
-    # c.run("kubectl delete service web redis")
-    # c.run("kubectl delete deployment web redis")
-    c.run("kubectl delete all --all")
+    c.run("kubectl delete service web")
+    c.run("kubectl delete deployment web")
+    # c.run("kubectl delete all --all")
 
+    # c.run("date >> {}".format(tasks_log))
+    # c.run("echo 'removed app' >> {}".format(tasks_log))
     c.run("date >> {}".format(tasks_log))
-    c.run("echo 'removed app' >> {}".format(tasks_log))
+    c.run("echo 'removed web' >> {}".format(tasks_log))
+    c.run("echo to remove all, use 'kubectl delete all --all'")
     c.run("kubectl get pods >> {}".format(tasks_log))
 
 @task
