@@ -160,7 +160,7 @@ def showLogEntry():
         fieldValues = redis.hgetall("logEntry:"+logEntryKey)
         page_content +="<h4>{}</h4>".format("logEntry:"+logEntryKey)
         page_content +="<ul>"
-        for i in fieldValues.keys():
+        for i in sorted(fieldValues.keys()):
             page_content += "<li>{} : {}</li>".format(i, fieldValues[i])
         page_content +="</ul>"
         return render_template("admin.html", page_content = Markup(page_content), \
@@ -168,5 +168,5 @@ def showLogEntry():
     return render_template("admin.html", form=form, title=TITLE, desc=DESC, status=status)
 
 if __name__ == "__main__":
-    # app.run(host="0.0.0.0", debug=True)
-    app.run(debug=True,use_reloader=False)
+    app.run(host="0.0.0.0", debug=True)
+    # app.run(debug=True,use_reloader=False)

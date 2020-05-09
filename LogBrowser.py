@@ -3,16 +3,16 @@ import config
 from redis import Redis
 
 
-# Desktop
-host = config.REDIS_DESKTOP["host"]
-port = config.REDIS_DESKTOP["port"]
-pwd = config.REDIS_DESKTOP["password"]
-db = config.REDIS_DESKTOP["db"]
-redis = Redis(db=db, host=host, port=port, password=pwd,
-              charset="utf-8", decode_responses=True)
+# # Desktop
+# host = config.REDIS_DESKTOP["host"]
+# port = config.REDIS_DESKTOP["port"]
+# pwd = config.REDIS_DESKTOP["password"]
+# db = config.REDIS_DESKTOP["db"]
+# redis = Redis(db=db, host=host, port=port, password=pwd,
+#               charset="utf-8", decode_responses=True)
 
-# # Kubernetes Deployment
-# redis = Redis(host="redis", charset="utf-8", decode_responses=True)
+# Kubernetes Deployment
+redis = Redis(host="redis", charset="utf-8", decode_responses=True)
 
 pipe = redis.pipeline()
 
