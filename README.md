@@ -2,16 +2,12 @@
 
 Updating base demo app to using redis to support web log analysis
 
-Todos:
-* map LogBrowser capabilities to view templates
-* views:  LogEntry Browser, Log Field value distribution, Admin (view/set source files, etc.)
+### Todo:
+Scale back big-bang loads and analysis -- use incremental (by file) based analysis deltas (Adding and subtracting files from the analysis)
+
+### Files/Usage
 
 app.py == minimal python flask/redis web app
-
-To check code quality locally, you can run flake in a container:
-* alias flake="docker run -ti --rm -v $(pwd):/apps alpine/flake8:3.5.0"
-* flake --help
-* flake app.py
 
 Dockerfile ==  builds that app as a container (based on python 3.8 image)
 
