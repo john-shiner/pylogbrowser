@@ -91,13 +91,14 @@ def page_not_found(e):
 def internal_server_error(e):
     return render_template('500.html'), 500
 
-@app.route('/')
 @app.route('/counter')
 def index():
     redis.incr('hits')
     status = "Redis 'hits' counter is incremented"
     return render_template("counter.html", hit_counts=redis.get('hits'),
                            title=TITLE, desc=DESC, status=status)
+
+@app.route('/')
 @app.route("/db/info")
 def dbinfo():
     # View constants
@@ -140,6 +141,33 @@ def flushdb():
     lb._instance.le_Keys = set()
     lb._instance.indexValueMaps = {}
     return redirect(url_for('index'))
+
+class ExecuteCmd(FlaskForm):
+
+    cmd = StringField('Enter a command-line redis command ', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+@app.route("/executeCmd", methods=['GET', 'POST'])
+def executeCmd():
+    # redis.execute_command()
+    form=ExecuteCmd()
+    cmd =  form.cmd.data 
+    TITLE = "Redis Command Line Entry"
+    DESC = "Executed Simple Redis Commands"
+    status = "Ok"
+    if form.validate_on_submit():
+        status = "Command provided:{}".format(cmd)
+        page_content = ""
+        # print(redis.hgetall("logEntry:"+logEntryKey))
+        response = redis.execute_command(cmd)
+        page_content +="<h4>{}</h4>".format("Command:  "+ cmd)
+        page_content +="<div>"
+        page_content += "<p>{}</p>".format(response)
+        page_content +="</div>"
+        return render_template("analysis.html", page_content = Markup(page_content), \
+                                title=TITLE, form=form, desc=DESC, status=status)
+    return render_template("admin.html", form=form, title=TITLE, desc=DESC, status=status)
+
 
 class LogEntryForm(FlaskForm):
 

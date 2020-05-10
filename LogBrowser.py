@@ -1,6 +1,7 @@
 import re
 import config
 from redis import Redis
+import os
 
 
 # Desktop
@@ -229,6 +230,8 @@ class LogBrowser:
            ## If desired, uncomment to persist the valueMap for indexName
 
         print("Import of {} records completed.".format(le_count))
+
+# os.system("redis-cli smembers loadedLogFiles")
 
 # lb = LogBrowser()
 # lb.createAllIndexValueMaps()
