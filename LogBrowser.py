@@ -3,16 +3,16 @@ import config
 from redis import Redis
 
 
-# # Desktop
-# host = config.REDIS_DESKTOP["host"]
-# port = config.REDIS_DESKTOP["port"]
-# pwd = config.REDIS_DESKTOP["password"]
-# db = config.REDIS_DESKTOP["db"]
-# redis = Redis(db=db, host=host, port=port, password=pwd,
-#               charset="utf-8", decode_responses=True)
+# Desktop
+host = config.REDIS_DESKTOP["host"]
+port = config.REDIS_DESKTOP["port"]
+pwd = config.REDIS_DESKTOP["password"]
+db = config.REDIS_DESKTOP["db"]
+redis = Redis(db=db, host=host, port=port, password=pwd,
+              charset="utf-8", decode_responses=True)
 
-# Kubernetes Deployment
-redis = Redis(host="redis", charset="utf-8", decode_responses=True)
+# # Kubernetes Deployment
+# redis = Redis(host="redis", charset="utf-8", decode_responses=True)
 
 pipe = redis.pipeline()
 
@@ -85,6 +85,7 @@ class LogBrowser:
         return self._logEntries.keys()
 
     def analysis_page_content(self):
+
         ivm = IndexMgr.indexValueManagers
 
         page_content = ""
@@ -97,7 +98,9 @@ class LogBrowser:
             # breakpoint()
             for j in vm.keys():
                 page_content += "<li>Value '{}' mapped to {} logEntries</li>".format(j, len(vm[j]))
-            page_content +="</ul>"        
+                page_content += "<p>---> mapped logEntries -----    "
+                page_content += "map:{}:{}</p>".format(i, j)
+            page_content +="</ul>"
         return page_content
 
     def createAllIndexValueMaps(self):
@@ -124,11 +127,19 @@ class LogBrowser:
             indexMgr.setadd(fieldVal)
 
             indexMgr.maple(fieldVal, le)
-        ## If desired, uncomment to persist the valueMap for indexName
-        # pipe.sadd("{}_valueSet".format(i), str(indexValueMaps[i].valueSet))
-            # for vm in indexValueMaps[i].valueMap:
-            #     pipe.lpush("{}:val:{}".format(i,vm), str(indexValueMaps[i].valueMap[vm]))
-            # pipe.execute()
+
+        vm = indexMgr.valueMap
+        # breakpoint()
+        # pipe.set("idx:{}".format(indexName), vm)
+        # print("idx:{}".format(indexName))
+
+        for i in vm.keys():
+            storable = [ int(x.split(":")[1]) for x in vm[i]]
+            pipe.set("idx:{}:{}".format(indexName, i), "map:{}:{}".format(indexName, i) )
+            # print("idx:{}:{}".format(indexName, i))
+            pipe.set("map:{}:{}".format(indexName, i), str(sorted(storable)))
+            # print("map:{}:{}".format(indexName, i))
+        pipe.execute()
 
     def getLoadedFiles(self):
         return sorted(redis.smembers("loadedLogFiles"))
