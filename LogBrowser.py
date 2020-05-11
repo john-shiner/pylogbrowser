@@ -4,16 +4,16 @@ from redis import Redis
 import os
 
 
-# Desktop
-host = config.REDIS_DESKTOP["host"]
-port = config.REDIS_DESKTOP["port"]
-pwd = config.REDIS_DESKTOP["password"]
-db = config.REDIS_DESKTOP["db"]
-redis = Redis(db=db, host=host, port=port, password=pwd,
-              charset="utf-8", decode_responses=True)
+# # Desktop
+# host = config.REDIS_DESKTOP["host"]
+# port = config.REDIS_DESKTOP["port"]
+# pwd = config.REDIS_DESKTOP["password"]
+# db = config.REDIS_DESKTOP["db"]
+# redis = Redis(db=db, host=host, port=port, password=pwd,
+#               charset="utf-8", decode_responses=True)
 
-# # Kubernetes Deployment
-# redis = Redis(host="redis", charset="utf-8", decode_responses=True)
+# Kubernetes Deployment
+redis = Redis(host="redis", charset="utf-8", decode_responses=True)
 
 pipe = redis.pipeline()
 
@@ -25,6 +25,7 @@ class IndexMgr:
     def __init__(self, fieldName):
         self.fieldName = fieldName
         self.valueMap = {}
+        self.page_content = ""
         # self.valueSet = set()
 
         IndexMgr.indexValueManagers[fieldName] = self
@@ -39,6 +40,21 @@ class IndexMgr:
         else:
             vm[fieldValue] = []
             vm[fieldValue].append(str(logEntryKey))
+
+    def content(self):
+        if len(self.page_content) > 0:
+            return self.page_content
+        vm = self.valueMap
+        self.page_content +="<h4>{}</h4>".format(self.fieldName)
+        self.page_content +="<ul>"
+        # breakpoint()
+        for j in vm.keys():
+            self.page_content += "<li>Value '{}' mapped to {} logEntries</li>".format(j, len(vm[j]))
+            self.page_content += "<p>---> mapped logEntries -----    "
+            self.page_content += "map:{}:{}</p>".format(self.fieldName, j)
+        self.page_content +="</ul>"
+        return self.page_content
+       
 
 # class LogBrowser(redisInstance):
 #     redis = redisInstance
@@ -103,15 +119,18 @@ class LogBrowser:
             for i in self.supportedIndices:
                 mgr = ivm[i]
                 vm = mgr.valueMap
-                # vs = mgr.valueSet
-                page_content +="<h4>{}</h4>".format(i)
-                page_content +="<ul>"
-                # breakpoint()
-                for j in vm.keys():
-                    page_content += "<li>Value '{}' mapped to {} logEntries</li>".format(j, len(vm[j]))
-                    page_content += "<p>---> mapped logEntries -----    "
-                    page_content += "map:{}:{}</p>".format(i, j)
-                page_content +="</ul>"
+
+                page_content += mgr.content()
+
+                # page_content +="<h4>{}</h4>".format(i)
+                # page_content +="<ul>"
+                # # breakpoint()
+                # for j in vm.keys():
+                #     page_content += "<li>Value '{}' mapped to {} logEntries</li>".format(j, len(vm[j]))
+                #     page_content += "<p>---> mapped logEntries -----    "
+                #     page_content += "map:{}:{}</p>".format(i, j)
+                # page_content +="</ul>"
+
             LogBrowser._instance.page_content = page_content
             return page_content
 

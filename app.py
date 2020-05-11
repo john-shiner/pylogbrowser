@@ -7,11 +7,12 @@ from flask import render_template, session, redirect, url_for, Markup, request
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, SelectMultipleField
+from wtforms import StringField, SubmitField, SelectMultipleField, SelectField
 from wtforms.validators import DataRequired
 
 from LogBrowser import LogBrowser as LB
 from LogBrowser import redis
+from LogBrowser import IndexMgr
 
 # menu()
 # createAllIndexValueMaps()
@@ -38,6 +39,32 @@ status = "Status - so far so good"
 lb = LB()
 # lb.loadLogFile()
 
+class IndexForm(FlaskForm):
+    fieldChoices = []
+    for i in lb.supportedIndices:
+        fieldChoices.append((i, i))
+    selectedIndex = SelectField("Select Index", choices=fieldChoices, validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+@app.route('/')
+@app.route('/field', methods=['GET', 'POST'])
+def field():
+    selectedIndex =  None
+    status = "Select Field Value"
+    form = IndexForm()
+    DESC = "Browse by Field Values"
+    if form.validate_on_submit():
+        status = "Analysis for {}".format(form.selectedIndex.data)
+        page_content = IndexMgr.indexValueManagers[form.selectedIndex.data].content()
+
+        form.selectedIndex.data = None
+
+        # lb.createAllIndexValueMaps()
+        return render_template('analysis.html', page_content= Markup(page_content), title=TITLE, desc=DESC, status=status)
+
+    return render_template('admin.html', form=form, title=TITLE, desc=DESC, status=status)
+
+
 class AdminForm(FlaskForm):
     logFiles = []
     selectedFiles = []
@@ -49,8 +76,8 @@ class AdminForm(FlaskForm):
     selectedFiles = SelectMultipleField(choices=sorted(logFiles), validators=[DataRequired()])
     submit = SubmitField('Submit')
 
-@app.route('/admin', methods=['GET', 'POST'])
-def admin():
+@app.route('/loadfiles', methods=['GET', 'POST'])
+def loadfiles():
     selectedFiles =  None
     status = "Select log files to analyze.  Already loaded: {}".format(lb.getLoadedFiles())
     form = AdminForm()
@@ -98,7 +125,6 @@ def index():
     return render_template("counter.html", hit_counts=redis.get('hits'),
                            title=TITLE, desc=DESC, status=status)
 
-@app.route('/')
 @app.route("/db/info")
 def dbinfo():
     # View constants
