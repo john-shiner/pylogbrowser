@@ -3,7 +3,6 @@ import config
 from redis import Redis
 import os
 
-
 # # Desktop
 # host = config.REDIS_DESKTOP["host"]
 # port = config.REDIS_DESKTOP["port"]
@@ -26,6 +25,7 @@ class IndexMgr:
         self.fieldName = fieldName
         self.valueMap = {}
         self.page_content = ""
+        self.table_content = ""
         # self.valueSet = set()
 
         IndexMgr.indexValueManagers[fieldName] = self
@@ -55,6 +55,40 @@ class IndexMgr:
         self.page_content +="</ul>"
         return self.page_content
        
+    def tab_content(self):
+        if len(self.table_content) > 0:
+            return self.table_content
+        vm = self.valueMap
+        self.table_content += "<div class=\"container\">"
+        self.table_content += "<h4>Field Name: {}</h4>".format(self.fieldName)
+        self.table_content += "<table class=\"table\">"
+        self.table_content += "<thead class=\"thead-dark\">"
+        self.table_content += "<tr>"
+        self.table_content += "<th scope=\"col\">Field Value</th>"
+        self.table_content += "<th scope=\"col\">Mapped LogEntry Count</th>"
+        self.table_content += "<th scope=\"col\">Percent of analyzed</th>"
+        self.table_content += "<th scope=\"col\">Redis Key to Mapped LogEntries</th>"
+        self.table_content += "</tr>"
+        self.table_content += "</thead>"
+
+        self.table_content += "<tbody>"
+        le_count = LogBrowser.logEntryCount()
+        # breakpoint()
+        for j in vm.keys():
+            self.table_content += "<tr>"
+            self.table_content += "<td>{}</td>".format(j) 
+            le_idx_count = len(vm[j])
+            percent = int(le_idx_count/le_count * 100)
+            self.table_content += "<td>{}</td>".format(le_idx_count)
+            self.table_content += "<td>{}</td>".format(percent)
+            self.table_content += "<td>map:{}:{}</td>".format(self.fieldName, j)
+            self.table_content += "</tr>"
+
+        self.table_content += "</tbody>"
+        self.table_content += "</table>"
+        self.table_content += "</div>"
+
+        return self.table_content
 
 # class LogBrowser(redisInstance):
 #     redis = redisInstance
@@ -69,6 +103,7 @@ class LogBrowser:
             cls._instance = super().__new__(cls, *args, **kwargs)
             # cls._instance.set_vm_dirtyFlag()
             cls._instance.page_content = None
+            cls._instance.table_content = None
             cls._instance.csv = None
             cls._instance.createAllIndexValueMaps()
         return cls._instance
@@ -91,23 +126,40 @@ class LogBrowser:
     def set_vm_dirtyFlag(self):
         redis.set("vm_dirtyFlag", "True")
         LogBrowser._instance.page_content = None
+        LogBrowser._instance.table_content = None
 
     # Store for index-value-logEntry maps as they are created
     def indexValueMaps():
         return IndexMgr.indexValueManagers
 
-    def logEntryCount(self):
-        return len(self.logEntries())
+    def logEntryCount():
+        return len(LogBrowser.logEntries())
 
-    def logEntries(self):
-        self._logEntries = {}
+    def logEntries():
+        LogBrowser._logEntries = {}
         for d in redis.scan_iter(match="logEntry:*", count='100'):
-            self._logEntries[d] = redis.hgetall(d)
-        return self._logEntries
+            LogBrowser._logEntries[d] = redis.hgetall(d)
+        return LogBrowser._logEntries
 
     def logEntryKeys(self):
-        self._logEntries = self.logEntries()
-        return self._logEntries.keys()
+        LogBrowser._logEntries = LogBrowser.logEntries()
+        return LogBrowser._logEntries.keys()
+
+    def analysis_table_content(self):
+        if LogBrowser._instance.table_content:
+            return LogBrowser._instance.table_content
+        else:
+            ivm = IndexMgr.indexValueManagers
+
+            tab_content = ""
+            for i in self.supportedIndices:
+                mgr = ivm[i]
+                vm = mgr.valueMap
+
+                tab_content += mgr.tab_content()
+
+            LogBrowser._instance.table_content = tab_content
+            return tab_content
 
     def analysis_page_content(self):
         if LogBrowser._instance.page_content:

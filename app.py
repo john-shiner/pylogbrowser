@@ -46,7 +46,7 @@ class IndexForm(FlaskForm):
     selectedIndex = SelectField("Select Index", choices=fieldChoices, validators=[DataRequired()])
     submit = SubmitField('Submit')
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 @app.route('/field', methods=['GET', 'POST'])
 def field():
     selectedIndex =  None
@@ -55,7 +55,7 @@ def field():
     DESC = "Browse by Field Values"
     if form.validate_on_submit():
         status = "Analysis for {}".format(form.selectedIndex.data)
-        page_content = IndexMgr.indexValueManagers[form.selectedIndex.data].content()
+        page_content = IndexMgr.indexValueManagers[form.selectedIndex.data].tab_content()
 
         form.selectedIndex.data = None
 
@@ -99,11 +99,11 @@ def loadfiles():
 def analysis():
 
     DESC = "Summary Value Mappings across Log Entries"
-    status = "Loaded LogEntries:  {}".format(lb.logEntryCount())
+    status = "Loaded LogEntries:  {}".format(LB.logEntryCount())
 
     # page_content = lb.printAllIndexValueMaps()
 
-    page_content = lb.analysis_page_content()
+    page_content = lb.analysis_table_content()
 
     # print(page_content)
     return render_template("analysis.html", page_content = Markup(page_content),
@@ -159,14 +159,6 @@ def dbtest():
     except RedisError as err:
         return render_template('dbtest.html', title=TITLE,
                                desc=DESC, error=err)
-
-@app.route("/flushdb")
-def flushdb():
-    redis.flushdb()
-    session['logEntryCount'] = 0
-    lb._instance.le_Keys = set()
-    lb._instance.indexValueMaps = {}
-    return redirect(url_for('index'))
 
 class ExecuteCmd(FlaskForm):
 
