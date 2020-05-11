@@ -43,7 +43,7 @@ def deploy(c):
     # kubectl expose deployment db --selector='app=redis,tier=backend' \
     #                             --dry-run --output=yaml > new-redis-service.yaml
 
-    # redis_depl
+    redis_depl
     # c.run("kubectl create -f {}".format(redis_depl))
     # c.run("kubectl create -f {}".format(redis_svc))
     c.run("kubectl create -f {}".format(web_depl))
@@ -62,8 +62,8 @@ def undeploy(c):
     c.run("kubectl delete deployment web")
     # c.run("kubectl delete all --all")
 
-    # c.run("date >> {}".format(tasks_log))
-    # c.run("echo 'removed app' >> {}".format(tasks_log))
+    c.run("date >> {}".format(tasks_log))
+    c.run("echo 'removed app' >> {}".format(tasks_log))
     c.run("date >> {}".format(tasks_log))
     c.run("echo 'removed web' >> {}".format(tasks_log))
     c.run("echo to remove all, use 'kubectl delete all --all'")
