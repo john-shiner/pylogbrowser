@@ -1,19 +1,22 @@
-# Minimal app with docker-compose, k8s, python3, flask, redis
+# Fun with docker-compose, k8s, python3, flask, redis
 
-Updating base demo app to using redis to support web log analysis
-
-### Todo:
-Scale back big-bang loads and analysis -- use incremental (by file) based analysis deltas (Adding and subtracting files from the analysis)
+Application:  Flask app to process log files into redis data structures for web log analysis.
+Development:  Uses the 'Invoke' library to create convenience commands for service deployment, etc.
+Platform:  Kubernetes (yaml files under k8s/ folder)
 
 ### Files/Usage
 
-app.py == minimal python flask/redis web app
+app.py == flask web app using LogBrowser module for services
 
 Dockerfile ==  builds that app as a container (based on python 3.8 image)
 
 docker-compose.yml == assembles the flask and redis containers into an application
 
-Usage:
+LogBrowser.py == the processor loading, parsing, and storing LogFiles into Redis data structures
+
+tasks.py == Command-line tools exposed with the 'invoke' library.  Commands are summarized below.
+
+#### Docker-Compose Dev Deployment (not prod) Usage:
 
 * docker-compose build  # build the containers in the docker-compose file
 
@@ -25,11 +28,25 @@ Usage:
 
 Open/refresh http://localhost:8000 to see the app
 
-## Kubernetes (minikube)
+#### Minikube (kubernetes) Dev Deployment
 
-### Minikube deployment commands (run from k8s directory)
+* Assumes a running minikube platform
 
-Invoke (inv) commands (to evolve)
+Basic command support to deploy and undeploy a flask app (web) running against a redis db.  The web application can be scaled up or down to a desired number of instance pods.  
+
+After running the deploy command, run 'minikube services' to get exposed ports
+
+##### Primary k8s convenience commands
+
+Run these from the project root directory (in the tasks.py folder:
+
+*  deploy     - Run this to deploy the application stack to minikube
+*  undeploy   - Run this to remove (all) the application stack(s) from minikube
+*  scale -n <#web replicas> - Scale the web pods to the desired number of replicas
+*  webport    - Run this to return the exposed port for the web service
+*  db         - Output of this command is a parameterized Redis-cli command string
+
+#### Invoke (inv) commands (reference)
 
 *  dash       - Run this to launch the minikube dashboard
 *  db         - Output of this command is a parameterized Redis-cli command string
@@ -41,5 +58,5 @@ Invoke (inv) commands (to evolve)
 *  undeploy   - Run this to remove (all) the application stack(s) from minikube
 *  webport    - Run this to return the exposed port for the web service
 
-After running the deploy command, run 'minikube services' to get exposed ports
+
 
