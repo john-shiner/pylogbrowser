@@ -4,19 +4,19 @@ Application:  Flask app to process log files into redis data structures for web 
 Development:  Uses the 'Invoke' library to create convenience commands for service deployment, etc.
 Platform:  Kubernetes (yaml files under k8s/ folder)
 
-### Files/Usage
+## Files/Usage
 
-app.py == flask web app using LogBrowser module for services
+* app.py == flask web app using LogBrowser module for services
 
-Dockerfile ==  builds that app as a container (based on python 3.8 image)
+* Dockerfile ==  builds that app as a container (based on python 3.8 image)
 
-docker-compose.yml == assembles the flask and redis containers into an application
+* docker-compose.yml == assembles the flask and redis containers into an application
 
-LogBrowser.py == the processor loading, parsing, and storing LogFiles into Redis data structures
+* LogBrowser.py == the processor loading, parsing, and storing LogFiles into Redis data structures
 
-tasks.py == Command-line tools exposed with the 'invoke' library.  Commands are summarized below.
+* tasks.py == Command-line tools exposed with the 'invoke' library.  Commands are summarized below.
 
-#### Docker-Compose Dev Deployment (not prod) Usage:
+## Docker-Compose Dev Deployment (not prod) Usage:
 
 * docker-compose build  # build the containers in the docker-compose file
 
@@ -28,15 +28,15 @@ tasks.py == Command-line tools exposed with the 'invoke' library.  Commands are 
 
 Open/refresh http://localhost:8000 to see the app
 
-#### Minikube (kubernetes) Dev Deployment
+## Minikube (kubernetes) Dev Deployment
 
-* Assumes a running minikube platform
+##### Assumes a running minikube platform
 
 Basic command support to deploy and undeploy a flask app (web) running against a redis db.  The web application can be scaled up or down to a desired number of instance pods.  
 
 After running the deploy command, run 'minikube services' to get exposed ports
 
-##### Primary k8s convenience commands
+#### Primary k8s convenience commands
 
 Run these from the project root directory (in the tasks.py folder:
 
@@ -46,7 +46,7 @@ Run these from the project root directory (in the tasks.py folder:
 *  webport    - Run this to return the exposed port for the web service
 *  db         - Output of this command is a parameterized Redis-cli command string
 
-#### Invoke (inv) commands (reference)
+## Invoke (inv) commands (reference)
 
 *  dash       - Run this to launch the minikube dashboard
 *  db         - Output of this command is a parameterized Redis-cli command string
