@@ -79,7 +79,7 @@ class AdminForm(FlaskForm):
 @app.route('/loadfiles', methods=['GET', 'POST'])
 def loadfiles():
     selectedFiles =  None
-    status = "Select log files to analyze.  Already loaded: {}".format(lb.getLoadedFiles())
+    status = "Select log files to analyze.  Already loaded: {}".format(LB.getLoadedFiles())
     form = AdminForm()
     DESC = "Log File Management"
     if form.validate_on_submit():

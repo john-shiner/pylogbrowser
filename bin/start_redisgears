@@ -1,0 +1,3 @@
+#! /bin/sh
+
+docker run -d --name redisgears -p 6379:6379 redislabs/redisgears:1.0.0

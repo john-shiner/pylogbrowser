@@ -43,9 +43,10 @@ def deploy(c):
     # kubectl expose deployment db --selector='app=redis,tier=backend' \
     #                             --dry-run --output=yaml > new-redis-service.yaml
 
-    redis_depl
-    # c.run("kubectl create -f {}".format(redis_depl))
-    # c.run("kubectl create -f {}".format(redis_svc))
+    # redis_depl - uncomment next two lines to install a new version 
+    c.run("kubectl create -f {}".format(redis_depl))
+    c.run("kubectl create -f {}".format(redis_svc))
+
     c.run("kubectl create -f {}".format(web_depl))
     c.run("kubectl create -f {}".format(web_svc))
 
@@ -58,9 +59,11 @@ def deploy(c):
 @task 
 def undeploy(c):
     "Run this to remove (all) the application stack(s) from minikube"
-    c.run("kubectl delete service web")
-    c.run("kubectl delete deployment web")
-    # c.run("kubectl delete all --all")
+
+    # # use delete all to change redis versions
+    # c.run("kubectl delete service web")
+    # c.run("kubectl delete deployment web")
+    c.run("kubectl delete all --all")
 
     c.run("date >> {}".format(tasks_log))
     c.run("echo 'removed app' >> {}".format(tasks_log))

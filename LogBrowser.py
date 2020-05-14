@@ -3,16 +3,16 @@ import config
 from redis import Redis
 import os
 
-# # Desktop
-# host = config.REDIS_DESKTOP["host"]
-# port = config.REDIS_DESKTOP["port"]
-# pwd = config.REDIS_DESKTOP["password"]
-# db = config.REDIS_DESKTOP["db"]
-# redis = Redis(db=db, host=host, port=port, password=pwd,
-#               charset="utf-8", decode_responses=True)
+# Desktop
+host = config.REDIS_DESKTOP["host"]
+port = config.REDIS_DESKTOP["port"]
+pwd = config.REDIS_DESKTOP["password"]
+db = config.REDIS_DESKTOP["db"]
+redis = Redis(db=db, host=host, port=port, password=pwd,
+              charset="utf-8", decode_responses=True)
 
-# Kubernetes Deployment
-redis = Redis(host="redis", charset="utf-8", decode_responses=True)
+# # Kubernetes Deployment
+# redis = Redis(host="redis", charset="utf-8", decode_responses=True)
 
 pipe = redis.pipeline()
 
@@ -161,53 +161,6 @@ class LogBrowser:
             LogBrowser._instance.table_content = tab_content
             return tab_content
 
-    def analysis_page_content(self):
-        if LogBrowser._instance.page_content:
-            return LogBrowser._instance.page_content
-        else:
-            ivm = IndexMgr.indexValueManagers
-
-            page_content = ""
-            for i in self.supportedIndices:
-                mgr = ivm[i]
-                vm = mgr.valueMap
-
-                page_content += mgr.content()
-
-                # page_content +="<h4>{}</h4>".format(i)
-                # page_content +="<ul>"
-                # # breakpoint()
-                # for j in vm.keys():
-                #     page_content += "<li>Value '{}' mapped to {} logEntries</li>".format(j, len(vm[j]))
-                #     page_content += "<p>---> mapped logEntries -----    "
-                #     page_content += "map:{}:{}</p>".format(i, j)
-                # page_content +="</ul>"
-
-            LogBrowser._instance.page_content = page_content
-            return page_content
-
-    def analysis_csv(self):
-        if LogBrowser._instance.csv:
-            return LogBrowser._instance.csv
-        else:
-            ivm = IndexMgr.indexValueManagers
-            row_header = "{}|{}|{}\n".format("Index", "Value", "Count")
-            row_content = row_header
-
-            for i in self.supportedIndices:
-                mgr = ivm[i]
-                vm = mgr.valueMap
-                # vs = mgr.valueSet
-                first_field = "{}|".format(i)
-
-                # breakpoint()
-                for j in vm.keys():
-                    row_content += first_field
-                    row_content += "{}|".format(j)
-                    row_content += "{}\n".format(len(vm[j]))
-            LogBrowser._instance.csv = row_content
-            return row_content
-
     def createAllIndexValueMaps(self):
         """ Creates a value-to-LogEntry map for the specified indexName"""
         IndexMgr.indexValueManagers = {}
@@ -225,8 +178,6 @@ class LogBrowser:
         if not self.vm_dirtyFlag():
             for i in redis.scan_iter(match="map:{}:*".format(indexName), count=100):
                 valueName = i.split(":")[2]
-                print(valueName)
-                breakpoint()
                 vm[valueName] = redis.get("map:{}:{}".format(indexName, valueName)).strip('][').split(', ')
         else:
 
@@ -249,7 +200,7 @@ class LogBrowser:
                 # print("map:{}:{}".format(indexName, i))
             pipe.execute()
 
-    def getLoadedFiles(self):
+    def getLoadedFiles():
         return sorted(redis.smembers("loadedLogFiles"))
 
     def loadLogFile(self, filePath):
@@ -258,11 +209,11 @@ class LogBrowser:
         self.set_vm_dirtyFlag()
 
         print("Importing ...")
-        if filePath in self.getLoadedFiles():
+        if filePath in LogBrowswer.getLoadedFiles():
             print("File {} is already loaded".format(filePath))
             return
 
-        le_count = self.logEntryCount()
+        le_count = LogBrowser.logEntryCount()
 
         # Reference app: gitprojects/logbrowser
 
@@ -326,6 +277,44 @@ class LogBrowser:
            ## If desired, uncomment to persist the valueMap for indexName
 
         print("Import of {} records completed.".format(le_count))
+
+    def analysis_page_content(self):
+        if LogBrowser._instance.page_content:
+            return LogBrowser._instance.page_content
+        else:
+            ivm = IndexMgr.indexValueManagers
+
+            page_content = ""
+            for i in self.supportedIndices:
+                mgr = ivm[i]
+                vm = mgr.valueMap
+
+                page_content += mgr.content()
+
+            LogBrowser._instance.page_content = page_content
+            return page_content
+
+    def analysis_csv(self):
+        if LogBrowser._instance.csv:
+            return LogBrowser._instance.csv
+        else:
+            ivm = IndexMgr.indexValueManagers
+            row_header = "{}|{}|{}\n".format("Index", "Value", "Count")
+            row_content = row_header
+
+            for i in self.supportedIndices:
+                mgr = ivm[i]
+                vm = mgr.valueMap
+                # vs = mgr.valueSet
+                first_field = "{}|".format(i)
+
+                # breakpoint()
+                for j in vm.keys():
+                    row_content += first_field
+                    row_content += "{}|".format(j)
+                    row_content += "{}\n".format(len(vm[j]))
+            LogBrowser._instance.csv = row_content
+            return row_content
 
 # indexName="client_host"
 # lb = LogBrowser()
