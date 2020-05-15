@@ -32,6 +32,17 @@ def gh(c):
     c.run("open $(git remote -v | cut -f 1 -d ' ' |cut -f 2 | sed 1d | cut -d '.' -f1-2)/tree/$(git rev-parse --abbrev-ref HEAD)")
     
 @task
+def build(c):
+    "Build a docker image, store in dockerhub, and deploy"
+    c.run("inv undeploy")
+    c.run("eval $(minikube docker-env)")
+
+    c.run("docker rmi xxxxxxxxxx/frontend:v1")
+    c.run("docker build -t xxxxxxxxxx/frontend:v1 .")
+    c.run("./bin/push_flask-redis-frontend")
+    c.run("inv deploy")
+
+@task
 def st(c):
     "Open the current repository in Sublime Text"
     c.run("subl $INV_PATH")

@@ -41,7 +41,7 @@ lb = LB()
 
 class IndexForm(FlaskForm):
     fieldChoices = []
-    for i in lb.supportedIndices:
+    for i in LB.supportedIndices():
         fieldChoices.append((i, i))
     selectedIndex = SelectField("Select Index", choices=fieldChoices, validators=[DataRequired()])
     submit = SubmitField('Submit')
@@ -86,10 +86,10 @@ def loadfiles():
         status = "Loading data - loadedLogFiles, if submitted is stored in a session variable"
         for i in form.selectedFiles.data:
             lb.loadLogFile(i)
-        lb.createAllIndexValueMaps()
+        # lb.createAllIndexValueMaps()
         form.selectedFiles.data = None
 
-        # lb.createAllIndexValueMaps()
+        IndexMgr.createAllIndexValueMaps()
         return redirect(url_for('analysis'))
 
     return render_template('admin.html', form=form, \
