@@ -49,15 +49,15 @@ Run these from the project root directory (in the tasks.py folder:
 
 ## Invoke (inv) commands (reference)
 
-  build      Build a docker image, store in dockerhub, and deploy
-  dash       Run this to launch the minikube dashboard
-  db         Run the output of this command for a parameterized Redis-cli command string
-  dbport     Run this to return the exposed port for the redis service
-  deploy     Run this to deploy the application stack to minikube
-  gh         Open the current github branch on GitHub
-  scale      Run this to scale the web pods to <num> replicas
-  st         Open the current repository in Sublime Text
-  undeploy   Run this to remove (all) the application stack(s) from minikube
-  webport    Run this to return the exposed port for the web service
+*   build      Build a docker image, store in dockerhub, and deploy
+*   dash       Run this to launch the minikube dashboard
+*   db         Run the output of this command for a parameterized Redis-cli command string
+*   dbport     Run this to return the exposed port for the redis service
+*   deploy     Run this to deploy the application stack to minikube
+*   gh         Open the current github branch on GitHub
+*   scale      Run this to scale the web pods to <num> replicas
+*   st         Open the current repository in Sublime Text
+*   undeploy   Run this to remove (all) the application stack(s) from minikube
+*   webport    Run this to return the exposed port for the web service
 
 
