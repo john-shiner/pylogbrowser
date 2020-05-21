@@ -175,12 +175,24 @@ def executeCmd():
     status = "Ok"
     if form.validate_on_submit():
         status = "Command provided:{}".format(cmd)
+
         page_content = ""
+        response_str = ""
         # print(redis.hgetall("logEntry:"+logEntryKey))
         response = redis.execute_command(cmd)
+        if type(response) == list:
+            response_str += "<ul>"
+            for i in response:
+
+                response_str += "<li>{}</li>".format(i)
+            response_str += "</ul>"
+
         page_content +="<h4>{}</h4>".format("Command:  "+ cmd)
         page_content +="<div>"
-        page_content += "<p>{}</p>".format(response)
+        if type(response) == list:
+            page_content += response_str
+        else:
+            page_content += "<p>{}</p>".format(response)
         page_content +="</div>"
         return render_template("analysis.html", page_content = Markup(page_content), \
                                 title=TITLE, form=form, desc=DESC, status=status)
