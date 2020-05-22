@@ -2,7 +2,6 @@ from flask import Flask
 from redis import Redis, RedisError
 import os 
 
-
 from flask import render_template, session, redirect, url_for, Markup, request
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
@@ -148,58 +147,51 @@ def dbtest():
                                desc=DESC, error=err)
 
 class MapForm(FlaskForm):
-    fieldChoices = []
-
-
-
-    print("MapForm - fieldChoices = {}".format(fieldChoices))
-    selectedIndex = SelectField("Select Index", choices=fieldChoices, validators=[DataRequired()])
+    selectedIndex = SelectField("Select Index", validators=[DataRequired()])
     submit = SubmitField('Submit')
 
-@app.route("/mapfieldval", methods=['GET'])
-def mapfieldval():
-
-    # url is: /mapfieldval?mapkey=ABC
-    breakpoint()
+@app.route("/mapfieldval/mapkey=<mapkey>", methods=['GET', 'POST'])
+def mapfieldval(mapkey):
+    print("1) mapkey = {}".format(mapkey))
     keyval = request.args.get('mapkey', default='', type=str)
-    session['mapkey'] = keyval
-    print("keyval= {}".format(keyval))
-    # print("set logmap:  {}".format(keyval))
-    # redis.set("logmap", keyval)
+    searchKey = mapkey
 
-    # searchKey = redis.get("logmap")
-    searchKey = session.get('mapkey')
+    redis.set("logmap", searchKey)
 
     if searchKey == None:
         print("MapForm-searchKey == None)")
+
         redirect(url_for('analysis'))
+    idx = searchKey.split(":")[1]
+    val = searchKey.split(":")[2]
 
-    fieldChoices = []
-
-    for i in redis.zrange(searchKey, "0", "-1"):
-        fieldChoices.append((i, i))
-
-    idx = keyval.split(":")[1]
-    val = keyval.split(":")[2]
-
-    status = "Map Key is {}".format(keyval)
-
-
-    # form.fieldChoices = choices
+     # form.fieldChoices = choices
     DESC = "LogEntries Index: {}  Value: {}".format(idx, val)
-    status = "Map Key is {}".format(keyval)
+    status = "Map Key is {}".format(searchKey)
     form = MapForm()
+
+    # Calculate dynamic field choices
+    try:
+        fieldChoices = []
+        form.selectedIndex.choices = []
+        if redis.exists("logmap"): 
+            searchKey = redis.get("logmap")  
+            print("2) get logmap == {}".format(searchKey))
+            print(redis.zrange(searchKey, "0", "-1"))    
+            for i in redis.zrange(searchKey, "0", "-1"):
+                form.selectedIndex.choices.append((i, i))
+
+    except TypeError:
+        pass
 
     if form.validate_on_submit():
 
         selectedLogKey = form.selectedIndex.data
+        form.selectedIndex.data=""
 
-        # return redirect(url_for('showLogEntry', logkey=keyval), title=TITLE, desc=DESC, status=status, logkey=keyval)
         return redirect(url_for('browseLogEntry', logkey=selectedLogKey))
 
-        # return render_template('analysis.html', page_content= Markup(page_content), title=TITLE, desc=DESC, status=status)
-
-    return render_template('mapform.html', form=form, title=TITLE, desc=DESC, status=status, choices=fieldChoices)
+    return render_template('mapform.html', form=form, title=TITLE, desc=DESC, status=status)
 
 class ExecuteCmd(FlaskForm):
 
@@ -252,8 +244,8 @@ def showLogEntry():
     TITLE = "LogEntry Data"
     DESC = "Show Log Entry Details by ID"
     status = "Provide logEntry ID"
-    if form.validate_on_submit() or len(logkey) > 0:
-        status = "logEntry:{}".format(logkey)
+    if form.validate_on_submit():
+        status = "logEntry:{}".format(logEntryKey)
         page_content = ""
         # print(redis.hgetall("logEntry:"+logEntryKey))
         fieldValues = redis.hgetall("logEntry:"+logEntryKey)
@@ -266,15 +258,13 @@ def showLogEntry():
                                 title=TITLE, form=form, desc=DESC, status=status)
     return render_template("admin.html", form=form, title=TITLE, desc=DESC, status=status)
 
-@app.route('/browselogentry', methods=['GET', 'POST'])
+@app.route('/browselogentry', methods=['GET'])
 def browseLogEntry(logkey=""):
     if len(request.args['logkey']) > 0:
         logEntryKey = request.args['logkey']
     else:
         return
-    # breakpoint()
-    form=MapForm()
-    form.selectedIndex.data = logEntryKey
+
     TITLE = "LogEntry Data"
     DESC = "Show Log Entry Details by ID"
     status = "logEntry:{}".format(logkey)
@@ -286,9 +276,10 @@ def browseLogEntry(logkey=""):
     for i in sorted(fieldValues.keys()):
         page_content += "<li>{} : {}</li>".format(i, fieldValues[i])
     page_content +="</ul>"
-    return render_template("mapform.html", form=form, page_content = Markup(page_content), \
+    return render_template("base.html", page_content = Markup(page_content), \
                             title=TITLE, desc=DESC, status=status)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
     # app.run(host="0.0.0.0", debug=True, use_reloader=False)
+

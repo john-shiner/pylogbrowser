@@ -8,8 +8,8 @@ host = config.REDIS_DESKTOP["host"]
 port = config.REDIS_DESKTOP["port"]
 pwd = config.REDIS_DESKTOP["password"]
 db = config.REDIS_DESKTOP["db"]
-redis = Redis(db=db, host=host, port=port, password=pwd,
-              charset="utf-8", decode_responses=True)
+redis = Redis(db=db, host=host, port=port, password=pwd, \
+    charset="utf-8", decode_responses=True)
 
 # # Kubernetes Deployment
 # redis = Redis(host="redis", charset="utf-8", decode_responses=True)
@@ -92,7 +92,7 @@ class IndexMgr:
                 self.table_content += "<td>{}</td>".format(le_idx_count)
                 self.table_content += "<td>{}</td>".format(percent)
                 # /mapfieldval/?mapkey=ABC
-                self.table_content += "<td><a href=\"/mapfieldval?mapkey=map:{}:{}\">map:{}:{}</a></td>".format(self.fieldName, j, self.fieldName, j)
+                self.table_content += "<td><a href=\"/mapfieldval/mapkey=map:{}:{}\">map:{}:{}</a></td>".format(self.fieldName, j, self.fieldName, j)
                 self.table_content += "</tr>"
 
             self.table_content += "</tbody>"
