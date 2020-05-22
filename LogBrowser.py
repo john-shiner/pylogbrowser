@@ -3,16 +3,16 @@ import config
 from redis import Redis
 import os
 
-# Desktop
-host = config.REDIS_DESKTOP["host"]
-port = config.REDIS_DESKTOP["port"]
-pwd = config.REDIS_DESKTOP["password"]
-db = config.REDIS_DESKTOP["db"]
-redis = Redis(db=db, host=host, port=port, password=pwd, \
-    charset="utf-8", decode_responses=True)
+# # Desktop
+# host = config.REDIS_DESKTOP["host"]
+# port = config.REDIS_DESKTOP["port"]
+# pwd = config.REDIS_DESKTOP["password"]
+# db = config.REDIS_DESKTOP["db"]
+# redis = Redis(db=db, host=host, port=port, password=pwd, \
+#     charset="utf-8", decode_responses=True)
 
-# # Kubernetes Deployment
-# redis = Redis(host="redis", charset="utf-8", decode_responses=True)
+# Kubernetes Deployment
+redis = Redis(host="redis", charset="utf-8", decode_responses=True)
 
 pipe = redis.pipeline()
 
@@ -83,6 +83,7 @@ class IndexMgr:
 
 
             for j in vm.keys():
+                index_value = j.replace("/","^")
                 self.table_content += "<tr>"
                 self.table_content += "<td>{}</td>".format(j) 
                 le_idx_count = vm[j]
@@ -92,7 +93,7 @@ class IndexMgr:
                 self.table_content += "<td>{}</td>".format(le_idx_count)
                 self.table_content += "<td>{}</td>".format(percent)
                 # /mapfieldval/?mapkey=ABC
-                self.table_content += "<td><a href=\"/mapfieldval/mapkey=map:{}:{}\">map:{}:{}</a></td>".format(self.fieldName, j, self.fieldName, j)
+                self.table_content += "<td><a href=\"/mapfieldval/mapkey=map:{}:{}\">map:{}:{}</a></td>".format(self.fieldName, index_value, self.fieldName, j)
                 self.table_content += "</tr>"
 
             self.table_content += "</tbody>"
@@ -125,17 +126,17 @@ class LogBrowser:
 
         return cls._instance
 
-    indexNames = ["client_host", "client_id", "client_ip", \
-                        "environment", "organization", "proxy", \
-                        "proxy_basepath", "proxy_name", \
-                        "proxy_revision", "request_path", "request_uri", \
-                        "request_verb", "response_reason_phrase", \
-                        "response_status_code", "soap_operation", \
-                        "soap_siteId", "target_basepath", "target_host", \
-                        "target_ip", "virtual_host"]
+    # indexNames = ["client_host", "client_id", "client_ip", \
+    #                     "environment", "organization", "proxy", \
+    #                     "proxy_basepath", "proxy_name", \
+    #                     "proxy_revision", "request_path", "request_uri", \
+    #                     "request_verb", "response_reason_phrase", \
+    #                     "response_status_code", "soap_operation", \
+    #                     "soap_siteId", "target_basepath", "target_host", \
+    #                     "target_ip", "virtual_host"]
 
-    # supportedIndices = ["proxy", "request_path", "soap_operation", \
-    #                     "target_basepath", "target_host", ]
+    indexNames = [ "proxy", "proxy_basepath", "request_path", "request_uri", \
+                        "soap_operation", "soap_siteId", "target_basepath" ]
 
     def supportedIndices():
         return LogBrowser.indexNames
@@ -262,7 +263,9 @@ class LogBrowser:
                 for i in range(1 , len(rawFields)):
                     # Replace the first ':' character with a '|' to obtain proper k-v split
                     j = rawFields[i].replace(":", "|", 1)
+
                     jj = j.replace(":", "-")
+                    # jjj = jj.replace("/", "\\")
                     # k, v = j.split("|")
                     k, v = jj.split("|")
 

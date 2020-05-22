@@ -49,15 +49,20 @@ Run these from the project root directory (in the tasks.py folder:
 
 ## Invoke (inv) commands (reference)
 
-*   build      Build a docker image, store in dockerhub, and deploy
-*   dash       Run this to launch the minikube dashboard
-*   db         Run the output of this command for a parameterized Redis-cli command string
-*   dbport     Run this to return the exposed port for the redis service
-*   deploy     Run this to deploy the application stack to minikube
-*   gh         Open the current github branch on GitHub
-*   scale      Run this to scale the web pods to <num> replicas
-*   st         Open the current repository in Sublime Text
-*   undeploy   Run this to remove (all) the application stack(s) from minikube
-*   webport    Run this to return the exposed port for the web service
+Example usage:  inv undeploy rmi build deploy
 
-
+* <b>build </b> Build the web docker image
+* <b> clean-deploy	</b> Undeploy, remove the web docker image from local registry, build a web docker image, and deploy
+* <b>   dash  </b>         Run this to launch the minikube dashboard
+* <b>   db  </b>           Run the output of this command for a parameterized Redis-cli command string
+* <b>   dbport  </b>       Run this to return the exposed port for the redis service
+* <b>   deploy </b>        Run this to deploy the application stack to minikube
+* <b>   gh  </b>           Open the current github branch on GitHub
+* <b>   push   </b>        Run the bin/push-to-dockehub script -- requires env vars
+* <b>   rmi  </b>          Remove the web image from local (minikube) docker registry
+* <b>   scale </b>         Run this to scale the web pods to <num> replicas
+* <b>   st    </b>         Open the current repository in Sublime Text
+* <b>   undeploy  </b>     Run this to remove (all) the application stack(s) from minikube
+* <b>   usage  </b>        Example:  inv undeploy rmi build deploy
+* <b>   web   </b>         Launch the minikube hosted 'web' service to run the deployed application
+* <b>   webport  </b>      Run this to return the exposed port for the web service

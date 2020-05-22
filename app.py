@@ -154,7 +154,10 @@ class MapForm(FlaskForm):
 def mapfieldval(mapkey):
     print("1) mapkey = {}".format(mapkey))
     keyval = request.args.get('mapkey', default='', type=str)
-    searchKey = mapkey
+
+    # convert the mapkey value to match db key formatting
+    # ^ was substituted for / to ease URL creation
+    searchKey = mapkey.replace("^","/")
 
     redis.set("logmap", searchKey)
 
@@ -177,7 +180,7 @@ def mapfieldval(mapkey):
         if redis.exists("logmap"): 
             searchKey = redis.get("logmap")  
             print("2) get logmap == {}".format(searchKey))
-            print(redis.zrange(searchKey, "0", "-1"))    
+            # print(redis.zrange(searchKey, "0", "-1"))    
             for i in redis.zrange(searchKey, "0", "-1"):
                 form.selectedIndex.choices.append((i, i))
 

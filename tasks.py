@@ -25,21 +25,44 @@ tasks_log = "$INV_PATH/k8s/log.txt"
     # kubectl run db --image=redis --replicas=1 --port=6379 \
     #                         --labels='app=redis,tier=backend' \
     #                         --dry-run --output=yaml > new-redis-deployment-xx2.yaml
+@task
+def usage(c):
+    "Example:  inv undeploy rmi build deploy"
+    c.run("echo Make changes, then run the following to try them out")
+    c.run("echo Example:  inv undeploy rmi build deploy")
 
 @task
 def gh(c):
     "Open the current github branch on GitHub"
     c.run("open $(git remote -v | cut -f 1 -d ' ' |cut -f 2 | sed 1d | cut -d '.' -f1-2)/tree/$(git rev-parse --abbrev-ref HEAD)")
-    
+   
+@task
+def rmi(c):
+    "Remove the web image from local (minikube) docker registry"
+    c.run("eval $(minikube docker-env)")
+    c.run("docker rmi johnshiner/frontend:v1")
+
+@task
+def push(c):
+    "Run the bin/push-to-dockehub script -- requires env vars"
+    c.run("eval $(minikube docker-env)")
+    c.run("./bin/push_flask-redis-frontend")
+
 @task
 def build(c):
-    "Build a docker image, store in dockerhub, and deploy"
-    c.run("inv undeploy")
+    "Build the web docker image"
+    c.run("eval $(minikube docker-env)")
+    c.run("docker build -t johnshiner/frontend:v1 .")
+
+@task
+def clean_deploy(c):
+    "Undeploy, remove the web docker image from local registry, build a web docker image, and deploy"
     c.run("eval $(minikube docker-env)")
 
-    c.run("docker rmi xxxxxxxxxx/frontend:v1")
-    c.run("docker build -t xxxxxxxxxx/frontend:v1 .")
-    c.run("./bin/push_flask-redis-frontend")
+    c.run("inv undeploy")
+    c.run("inv rmi")
+    c.run("inv build")
+    # c.run("inv push")
     c.run("inv deploy")
 
 @task
@@ -55,6 +78,8 @@ def deploy(c):
     #                             --dry-run --output=yaml > new-redis-service.yaml
 
     # redis_depl - uncomment next two lines to install a new version 
+    c.run("eval $(minikube docker-env)")
+
     c.run("kubectl create -f {}".format(redis_depl))
     c.run("kubectl create -f {}".format(redis_svc))
 
@@ -74,6 +99,7 @@ def undeploy(c):
     # # use delete all to change redis versions
     # c.run("kubectl delete service web")
     # c.run("kubectl delete deployment web")
+
     c.run("kubectl delete all --all")
 
     c.run("date >> {}".format(tasks_log))
@@ -124,4 +150,8 @@ def dash(c):
     "Run this to launch the minikube dashboard"
     str = "minikube dashboard"
     c.run(str)
-
+    
+@task
+def web(c):
+    "Launch the minikube hosted 'web' service to run the deployed application"
+    c.run("minikube service web")
