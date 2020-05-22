@@ -8,8 +8,8 @@ host = config.REDIS_DESKTOP["host"]
 port = config.REDIS_DESKTOP["port"]
 pwd = config.REDIS_DESKTOP["password"]
 db = config.REDIS_DESKTOP["db"]
-redis = Redis(db=db, host=host, port=port, password=pwd,
-              charset="utf-8", decode_responses=True)
+redis = Redis(db=db, host=host, port=port, password=pwd, \
+    charset="utf-8", decode_responses=True)
 
 # # Kubernetes Deployment
 # redis = Redis(host="redis", charset="utf-8", decode_responses=True)
@@ -47,7 +47,7 @@ class IndexMgr:
 
         vm = self.valueMap
 
-        for i in redis.scan_iter(match="map:{}:*".format(self.fieldName), count=100):
+        for i in redis.scan_iter(match="idx:{}:*".format(self.fieldName), count=100):
             valueName = i.split(":")[2]
             # vm[valueName] = redis.zrange("map:{}:{}".format(indexName, valueName)).strip('][').split(', '), 0, -1)
             # vm[valueName] = redis.zrange("map:{}:{}".format(self.fieldName, valueName), 0, -1)
@@ -66,7 +66,7 @@ class IndexMgr:
             self.table_content += "<th scope=\"col\">Field Value</th>"
             self.table_content += "<th scope=\"col\">Mapped LogEntry Count</th>"
             self.table_content += "<th scope=\"col\">Percent of analyzed</th>"
-            self.table_content += "<th scope=\"col\">Redis Key to Mapped LogEntries</th>"
+            self.table_content += "<th scope=\"col\">Mapped LogEntries</th>"
             self.table_content += "</tr>"
             self.table_content += "</thead>"
 
@@ -91,7 +91,8 @@ class IndexMgr:
                 percent = int(le_idx_count/le_count * 100)
                 self.table_content += "<td>{}</td>".format(le_idx_count)
                 self.table_content += "<td>{}</td>".format(percent)
-                self.table_content += "<td>map:{}:{}</td>".format(self.fieldName, j)
+                # /mapfieldval/?mapkey=ABC
+                self.table_content += "<td><a href=\"/mapfieldval/mapkey=map:{}:{}\">map:{}:{}</a></td>".format(self.fieldName, j, self.fieldName, j)
                 self.table_content += "</tr>"
 
             self.table_content += "</tbody>"
@@ -292,13 +293,18 @@ class LogBrowser:
 
         print("Import of {} records completed.".format(le_count))
        
-# lb.loadLogFile("./data/logFile2.log")
-# IndexMgr.createAllIndexValueMaps()
-# for i in IndexMgr.indexValueManagers.keys():
-#     print("{} - vm count = {}".format(i, len(IndexMgr.indexValueManagers[i].valueMap)))
-# breakpoint()
+# fieldChoices = []
 
-# rtn = []
-# rtn += redis.scan_iter(match="logEntry:*", count='100')
-# print(len(rtn))
-# print(LogBrowser.supportedIndices())
+# choices = []
+# searchKey = redis.get("logmap")
+# # print("get logmap:  {}".format(searchKey))
+
+# if len(searchKey) > 0:
+#     for i in redis.zrange(searchKey, "0", "-1"):
+#         choices.append((i, i))
+
+# fieldChoices = choices
+
+# print("searchKey {}".format(searchKey))
+# print("choices {}".format(choices))
+# print("fieldChoices {}".format(fieldChoices))

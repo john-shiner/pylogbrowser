@@ -2,7 +2,6 @@ from flask import Flask
 from redis import Redis, RedisError
 import os 
 
-
 from flask import render_template, session, redirect, url_for, Markup, request
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
@@ -14,16 +13,6 @@ from LogBrowser import LogBrowser as LB
 from LogBrowser import redis
 from LogBrowser import IndexMgr
 
-# menu()
-# createAllIndexValueMaps()
-# printIndexValueMap("target_basepath")
-# printIndexValueLogEntries("target_basepath")
-# printIndexValueMap("target_basepath")
-# printAllIndexValueMaps()
-
-# loadLogFile()
-
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'hard to guess string'
 
@@ -34,10 +23,7 @@ TITLE = "Web Log Browser"
 DESC = "Redis Modeling Demo"
 status = "Status - so far so good"
 
-# redis = LB.redis
-
 lb = LB()
-# lb.loadLogFile()
 
 class IndexForm(FlaskForm):
     fieldChoices = []
@@ -65,10 +51,9 @@ def field():
     return render_template('admin.html', form=form, title=TITLE, desc=DESC, status=status)
 
 
-class AdminForm(FlaskForm):
-    logFiles = []
+class LogFileForm(FlaskForm):    
     selectedFiles = []
-
+    logFiles = []
     for file in os.listdir("./data"):
         if file.endswith(".log"):
             logFiles.append((os.path.join("./data", file), file))
@@ -78,15 +63,16 @@ class AdminForm(FlaskForm):
 
 @app.route('/loadfiles', methods=['GET', 'POST'])
 def loadfiles():
+
     selectedFiles =  None
     status = "Select log files to analyze.  Already loaded: {}".format(LB.getLoadedFiles())
-    form = AdminForm()
+    form = LogFileForm()
+
     DESC = "Log File Management"
     if form.validate_on_submit():
         status = "Loading data - loadedLogFiles, if submitted is stored in a session variable"
         for i in form.selectedFiles.data:
             lb.loadLogFile(i)
-        # lb.createAllIndexValueMaps()
         form.selectedFiles.data = None
 
         IndexMgr.createAllIndexValueMaps()
@@ -160,6 +146,53 @@ def dbtest():
         return render_template('dbtest.html', title=TITLE,
                                desc=DESC, error=err)
 
+class MapForm(FlaskForm):
+    selectedIndex = SelectField("Select Index", validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+@app.route("/mapfieldval/mapkey=<mapkey>", methods=['GET', 'POST'])
+def mapfieldval(mapkey):
+    print("1) mapkey = {}".format(mapkey))
+    keyval = request.args.get('mapkey', default='', type=str)
+    searchKey = mapkey
+
+    redis.set("logmap", searchKey)
+
+    if searchKey == None:
+        print("MapForm-searchKey == None)")
+
+        redirect(url_for('analysis'))
+    idx = searchKey.split(":")[1]
+    val = searchKey.split(":")[2]
+
+     # form.fieldChoices = choices
+    DESC = "LogEntries Index: {}  Value: {}".format(idx, val)
+    status = "Map Key is {}".format(searchKey)
+    form = MapForm()
+
+    # Calculate dynamic field choices
+    try:
+        fieldChoices = []
+        form.selectedIndex.choices = []
+        if redis.exists("logmap"): 
+            searchKey = redis.get("logmap")  
+            print("2) get logmap == {}".format(searchKey))
+            print(redis.zrange(searchKey, "0", "-1"))    
+            for i in redis.zrange(searchKey, "0", "-1"):
+                form.selectedIndex.choices.append((i, i))
+
+    except TypeError:
+        pass
+
+    if form.validate_on_submit():
+
+        selectedLogKey = form.selectedIndex.data
+        form.selectedIndex.data=""
+
+        return redirect(url_for('browseLogEntry', logkey=selectedLogKey))
+
+    return render_template('mapform.html', form=form, title=TITLE, desc=DESC, status=status)
+
 class ExecuteCmd(FlaskForm):
 
     cmd = StringField('Enter a command-line redis command ', validators=[DataRequired()])
@@ -225,6 +258,28 @@ def showLogEntry():
                                 title=TITLE, form=form, desc=DESC, status=status)
     return render_template("admin.html", form=form, title=TITLE, desc=DESC, status=status)
 
+@app.route('/browselogentry', methods=['GET'])
+def browseLogEntry(logkey=""):
+    if len(request.args['logkey']) > 0:
+        logEntryKey = request.args['logkey']
+    else:
+        return
+
+    TITLE = "LogEntry Data"
+    DESC = "Show Log Entry Details by ID"
+    status = "logEntry:{}".format(logkey)
+    page_content = ""
+    # print(redis.hgetall("logEntry:"+logEntryKey))
+    fieldValues = redis.hgetall("logEntry:"+logEntryKey)
+    page_content +="<h4>{}</h4>".format("logEntry:"+logEntryKey)
+    page_content +="<ul>"
+    for i in sorted(fieldValues.keys()):
+        page_content += "<li>{} : {}</li>".format(i, fieldValues[i])
+    page_content +="</ul>"
+    return render_template("base.html", page_content = Markup(page_content), \
+                            title=TITLE, desc=DESC, status=status)
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
     # app.run(host="0.0.0.0", debug=True, use_reloader=False)
+
