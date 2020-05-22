@@ -52,13 +52,8 @@ def field():
 
 
 class LogFileForm(FlaskForm):    
-    selectedFiles = []
-    logFiles = []
-    for file in os.listdir("./data"):
-        if file.endswith(".log"):
-            logFiles.append((os.path.join("./data", file), file))
 
-    selectedFiles = SelectMultipleField(choices=sorted(logFiles), validators=[DataRequired()])
+    selectedFiles = SelectMultipleField(validators=[DataRequired()])
     submit = SubmitField('Submit')
 
 @app.route('/loadfiles', methods=['GET', 'POST'])
@@ -67,8 +62,16 @@ def loadfiles():
     selectedFiles =  None
     status = "Select log files to analyze.  Already loaded: {}".format(LB.getLoadedFiles())
     form = LogFileForm()
-
     DESC = "Log File Management"
+    try:
+        form.selectedFiles.choices = []
+        for file in sorted(os.listdir("./data")):
+
+            if file.endswith(".log"):
+                form.selectedFiles.choices.append((os.path.join("./data", file), file))
+    except TypeError:
+        pass
+
     if form.validate_on_submit():
         status = "Loading data - loadedLogFiles, if submitted is stored in a session variable"
         for i in form.selectedFiles.data:
@@ -79,7 +82,7 @@ def loadfiles():
         return redirect(url_for('analysis'))
 
     return render_template('admin.html', form=form, \
-                           title=TITLE, desc=DESC, status=status)
+        title=TITLE, desc=DESC, status=status)
 
 @app.route('/analysis', methods=['GET'])
 def analysis():
