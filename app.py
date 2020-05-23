@@ -50,6 +50,23 @@ def field():
 
     return render_template('admin.html', form=form, title=TITLE, desc=DESC, status=status)
 
+@app.route('/browsefield/<indexfield>', methods=['GET'])
+def browsefield(indexfield):
+    print("indexfield = {}".format(indexfield))
+    selectedIndex = indexfield
+    print("selectedIndex = {}".format(selectedIndex))
+
+    TITLE = "LogEntry Data"
+    DESC = "Show Log Entry Details by ID"
+    status = "Field values for field: {}".format(selectedIndex)
+
+
+    DESC = "Distribution by {} Field Values".format(selectedIndex)
+
+    page_content = IndexMgr.indexValueManagers[selectedIndex].tab_content()
+
+    return render_template('analysis.html', page_content= Markup(page_content), title=TITLE, desc=DESC, status=status)
+
 
 class LogFileForm(FlaskForm):    
 
@@ -155,6 +172,7 @@ class MapForm(FlaskForm):
 
 @app.route("/mapfieldval/mapkey=<mapkey>", methods=['GET', 'POST'])
 def mapfieldval(mapkey):
+    # http://0.0.0.0:5000/mapfieldval/mapkey=map:soap_operation:grantOrgAward
     print("1) mapkey = {}".format(mapkey))
     keyval = request.args.get('mapkey', default='', type=str)
 
@@ -252,13 +270,21 @@ def showLogEntry():
     status = "Provide logEntry ID"
     if form.validate_on_submit():
         status = "logEntry:{}".format(logEntryKey)
+        DESC = "Log Entry Details by ID ({})".format(logEntryKey)
         page_content = ""
         # print(redis.hgetall("logEntry:"+logEntryKey))
         fieldValues = redis.hgetall("logEntry:"+logEntryKey)
         page_content +="<h4>{}</h4>".format("logEntry:"+logEntryKey)
         page_content +="<ul>"
         for i in sorted(fieldValues.keys()):
-            page_content += "<li>{} : {}</li>".format(i, fieldValues[i])
+            # self.table_content += "<td><a href=\"/mapfieldval/mapkey=map:{}:{}\">map:{}:{}</a></td>".format(self.fieldName, index_value, self.fieldName, j)
+            if i in LB.supportedIndices():
+                indexlink = "<a href=\"/browsefield/{}\">{}</a>".format(i, i)
+                index_value = fieldValues[i].replace("/","^")
+                val = "<a href=\"/mapfieldval/mapkey=map:{}:{}\">map:{}</a>".format(i, index_value, fieldValues[i])
+                page_content += "<li>{} : {}</li>".format(indexlink, val)
+            else:
+                page_content += "<li>{} : {}</li>".format(i, fieldValues[i])
         page_content +="</ul>"
         return render_template("admin.html", page_content = Markup(page_content), \
                                 title=TITLE, form=form, desc=DESC, status=status)
@@ -272,15 +298,22 @@ def browseLogEntry(logkey=""):
         return
 
     TITLE = "LogEntry Data"
-    DESC = "Show Log Entry Details by ID"
-    status = "logEntry:{}".format(logkey)
+    DESC = "Log Entry Details by ID ({})".format(logEntryKey)
+    status = "logEntry:{}".format(logEntryKey)
     page_content = ""
     # print(redis.hgetall("logEntry:"+logEntryKey))
     fieldValues = redis.hgetall("logEntry:"+logEntryKey)
     page_content +="<h4>{}</h4>".format("logEntry:"+logEntryKey)
     page_content +="<ul>"
     for i in sorted(fieldValues.keys()):
-        page_content += "<li>{} : {}</li>".format(i, fieldValues[i])
+        # self.table_content += "<td><a href=\"/mapfieldval/mapkey=map:{}:{}\">map:{}:{}</a></td>".format(self.fieldName, index_value, self.fieldName, j)
+        if i in LB.supportedIndices():
+            indexlink = "<a href=\"/browsefield/{}\">{}</a>".format(i, i)
+            index_value = fieldValues[i].replace("/","^")
+            val = "<a href=\"/mapfieldval/mapkey=map:{}:{}\">map:{}</a>".format(i, index_value, fieldValues[i])
+            page_content += "<li>{} : {}</li>".format(indexlink, val)
+        else:
+            page_content += "<li>{} : {}</li>".format(i, fieldValues[i])
     page_content +="</ul>"
     return render_template("base.html", page_content = Markup(page_content), \
                             title=TITLE, desc=DESC, status=status)

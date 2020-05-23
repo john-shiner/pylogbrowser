@@ -3,16 +3,16 @@ import config
 from redis import Redis
 import os
 
-# Desktop
-host = config.REDIS_DESKTOP["host"]
-port = config.REDIS_DESKTOP["port"]
-pwd = config.REDIS_DESKTOP["password"]
-db = config.REDIS_DESKTOP["db"]
-redis = Redis(db=db, host=host, port=port, password=pwd, \
-    charset="utf-8", decode_responses=True)
+# # Desktop
+# host = config.REDIS_DESKTOP["host"]
+# port = config.REDIS_DESKTOP["port"]
+# pwd = config.REDIS_DESKTOP["password"]
+# db = config.REDIS_DESKTOP["db"]
+# redis = Redis(db=db, host=host, port=port, password=pwd, \
+#     charset="utf-8", decode_responses=True)
 
-# # Kubernetes Deployment
-# redis = Redis(host="redis", charset="utf-8", decode_responses=True)
+# Kubernetes Deployment
+redis = Redis(host="redis", charset="utf-8", decode_responses=True)
 
 pipe = redis.pipeline()
 
@@ -126,20 +126,20 @@ class LogBrowser:
 
         return cls._instance
 
-    # indexNames = ["client_host", "client_id", "client_ip", \
-    #                     "environment", "organization", "proxy", \
-    #                     "proxy_basepath", "proxy_name", \
-    #                     "proxy_revision", "request_path", "request_uri", \
-    #                     "request_verb", "response_reason_phrase", \
-    #                     "response_status_code", "soap_operation", \
-    #                     "soap_siteId", "target_basepath", "target_host", \
-    #                     "target_ip", "virtual_host"]
+    indexNames = ["client_host", "client_id", "client_ip", \
+                        "environment", "organization", "proxy", \
+                        "proxy_basepath", "proxy_name", \
+                        "proxy_revision", "request_path", "request_uri", \
+                        "request_verb", "response_reason_phrase", \
+                        "response_status_code", "soap_operation", \
+                        "soap_siteId", "target_basepath", "target_host", \
+                        "target_ip", "virtual_host"]
 
-    indexNames = [ "proxy", "proxy_basepath", "request_path", "request_uri", \
-                        "soap_operation", "soap_siteId", "target_basepath" ]
+    # indexNames = [ "proxy", "proxy_basepath", "request_path", "request_uri", \
+    #                     "soap_operation", "soap_siteId", "target_basepath" ]
 
     def supportedIndices():
-        return LogBrowser.indexNames
+        return sorted(LogBrowser.indexNames)
 
     def vm_dirtyFlag():
         return "True" == redis.get("vm_dirtyFlag")
