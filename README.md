@@ -42,7 +42,7 @@ After running the deploy command, run 'minikube services' to get exposed ports
 
 #### Primary k8s convenience commands
 
-Run these from the project root directory (in the tasks.py folder:
+Run these from the project root directory (in the tasks.py folder).  Make sure to run 'eval $(minikube docker-env)' before running the k8s command sequences.
 
 *  <b>deploy</b>     - Run this to deploy the application stack to minikube
 *  <b>undeploy</b>   - Run this to remove (all) the application stack(s) from minikube
