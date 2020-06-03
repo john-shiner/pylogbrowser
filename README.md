@@ -1,30 +1,34 @@
 # Fun with docker-compose, k8s, python3, flask, redis
 
+This started as a real project tool to analyze API gateway logfiles for error trends.  In this iteration it is more of a learning project to learn web development with Flask, docker development conventions with docker-compose, and kubernetes deployment via Minikube.  Using Invoke to manage tasks has been invaluable to making progress.
+
 Application:  Flask app to process log files into redis data structures for web log analysis.
 Development:  Uses the 'Invoke' library to create convenience commands for service deployment, etc.
 Platform:  Kubernetes (yaml files under k8s/ folder)
 
 ## Files/Usage
 
-* app.py == flask web app using LogBrowser module for services
+* <b>app.py</b> == flask web app using LogBrowser module for services
 
-* Dockerfile ==  builds that app as a container (based on python 3.8 image)
+* <b>Dockerfile</b> ==  builds that app as a container (based on python 3.8 image)
 
-* docker-compose.yml == assembles the flask and redis containers into an application
+* <b>docker-compose.yml</b> == assembles the flask and redis containers into an application
 
-* LogBrowser.py == the processor loading, parsing, and storing LogFiles into Redis data structures
+* <b>LogBrowser.py</b> == the processor loading, parsing, and storing LogFiles into Redis data structures
 
-* tasks.py == Command-line tools exposed with the 'invoke' library.  Commands are summarized below.
+* <b>tasks.py</b> == Command-line tools exposed with the 'invoke' library.  Commands are summarized below.
+
+* <b>k8s/ directory</b> == contains yaml files for redis and web deployment and service management
 
 ## Docker-Compose Dev Deployment (not prod) Usage:
 
-* docker-compose build  # build the containers in the docker-compose file
+* <b>docker-compose build</b>  # build the containers in the docker-compose file
 
-* docker-compose up  # add -d to run detached (in background)
+* <b>docker-compose up </b> # add -d to run detached (in background)
 
-* docker-compose stop  # stop the app, leave the containers
+* <b>docker-compose stop</b>  # stop the app, leave the containers
 
-* docker-compose down  # stop the app, remove the containers (not the images)
+* <b>docker-compose down</b>  # stop the app, remove the containers (not the images)
 
 Open/refresh http://localhost:8000 to see the app
 
@@ -38,14 +42,14 @@ After running the deploy command, run 'minikube services' to get exposed ports
 
 #### Primary k8s convenience commands
 
-Run these from the project root directory (in the tasks.py folder:
+Run these from the project root directory (in the tasks.py folder).  Make sure to run 'eval $(minikube docker-env)' before running the k8s command sequences.
 
-*  deploy     - Run this to deploy the application stack to minikube
-*  undeploy   - Run this to remove (all) the application stack(s) from minikube
-*  scale -n <#web replicas> - Scale the web pods to the desired number of replicas
-*  webport    - Run this to return the exposed port for the web service
-*  db         - Output of this command is a parameterized Redis-cli command string
-*  build      - Task chain Build docker image, store in dockerhub, deploy to k8s
+*  <b>deploy</b>     - Run this to deploy the application stack to minikube
+*  <b>undeploy</b>   - Run this to remove (all) the application stack(s) from minikube
+*  <b>scale -n <#web replicas></b> - Scale the web pods to the desired number of replicas
+*  <b>webport</b>    - Run this to return the exposed port for the web service
+*  <b>db</b>         - Output of this command is a parameterized Redis-cli command string
+*  <b>build</b>      - Task chain Build docker image, store in dockerhub, deploy to k8s
 
 ## Invoke (inv) commands (reference)
 
