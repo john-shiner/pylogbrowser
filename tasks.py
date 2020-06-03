@@ -55,23 +55,7 @@ def build(c):
     c.run("docker build -t johnshiner/frontend:v1 .")
 
 @task
-def clean_deploy(c):
-    "Undeploy, remove the web docker image from local registry, build a web docker image, and deploy"
-    c.run("eval $(minikube docker-env)")
-
-    c.run("inv undeploy")
-    c.run("inv rmi")
-    c.run("inv build")
-    # c.run("inv push")
-    c.run("inv deploy")
-
-@task
-def st(c):
-    "Open the current repository in Sublime Text"
-    c.run("subl $INV_PATH")
-    
-@task
-def deploy(c):
+def deploy_all(c):
     "Run this to deploy the application stack to minikube"
 
     # kubectl expose deployment db --selector='app=redis,tier=backend' \
@@ -92,15 +76,54 @@ def deploy(c):
     c.run("minikube service list >> {}".format(tasks_log))
     c.run("minikube service web")
 
+@task
+def clean_deploy(c):
+    "Undeploy, remove the web docker image from local registry, build a web docker image, and deploy"
+    c.run("eval $(minikube docker-env)")
+    c.run("kubectl delete all --all")
+
+    c.run("inv rmi")
+    c.run("inv build")
+    # c.run("inv push")
+    c.run("inv deploy-all")
+
+@task
+def st(c):
+    "Open the current repository in Sublime Text"
+    c.run("subl $INV_PATH")
+    
+@task
+def deploy(c):
+    "Run this to deploy the application stack to minikube"
+
+    # kubectl expose deployment db --selector='app=redis,tier=backend' \
+    #                             --dry-run --output=yaml > new-redis-service.yaml
+
+    # redis_depl - uncomment next two lines to install a new version 
+    c.run("eval $(minikube docker-env)")
+
+    # c.run("kubectl create -f {}".format(redis_depl))
+    # c.run("kubectl create -f {}".format(redis_svc))
+
+    c.run("kubectl create -f {}".format(web_depl))
+    c.run("kubectl create -f {}".format(web_svc))
+
+    c.run("minikube service list")
+
+    c.run("date >> {}".format(tasks_log))
+    c.run("minikube service list >> {}".format(tasks_log))
+    c.run("minikube service web")
+
+
 @task 
 def undeploy(c):
     "Run this to remove (all) the application stack(s) from minikube"
 
-    # # use delete all to change redis versions
-    # c.run("kubectl delete service web")
-    # c.run("kubectl delete deployment web")
+    # use delete all to change redis versions
+    c.run("kubectl delete service web")
+    c.run("kubectl delete deployment web")
 
-    c.run("kubectl delete all --all")
+    # c.run("kubectl delete all --all")
 
     c.run("date >> {}".format(tasks_log))
     c.run("echo 'removed app' >> {}".format(tasks_log))
