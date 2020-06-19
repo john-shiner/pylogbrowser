@@ -11,6 +11,14 @@ import os
 # redis = Redis(db=db, host=host, port=port, password=pwd, \
 #     charset="utf-8", decode_responses=True)
 
+# # Redis Labs Enterprise Account
+# host = config.REDIS_LABS["host"]
+# port = config.REDIS_LABS["port"]
+# pwd = config.REDIS_LABS["password"]
+# db = config.REDIS_LABS["db"]
+# redis = Redis(db=db, host=host, port=port, password=pwd, \
+#     charset="utf-8", decode_responses=True)
+
 # Kubernetes Deployment
 redis = Redis(host="redis", charset="utf-8", decode_responses=True)
 
@@ -280,7 +288,7 @@ class LogBrowser:
 
                     pipe.hset(logEntryKey, "request_content", "PLACEHOLDER")
                     pipe.hset(logEntryKey, "response_payload", "PLACEHOLDER")
-                    pipe.hset(logEntryKey, "logFileName", sourceFileName)
+                    pipe.hset(logEntryKey, "_logFileName", sourceFileName)
                     pipe.sadd("loadedLogFiles", sourceFileName)
                     storable = int(logEntryKey.split(":")[1]) 
                     # print("v = {}".format(v))
