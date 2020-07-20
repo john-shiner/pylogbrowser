@@ -22,8 +22,6 @@ import os
 # Kubernetes Deployment
 redis = Redis(host="redis", charset="utf-8", decode_responses=True)
 
-pipe = redis.pipeline()
-
 # logEntryKeys = redis.keys("logEntry:*")
 
 class IndexMgr:
@@ -240,6 +238,9 @@ class LogBrowser:
         #  no payloads or other fields with "{}" chars in value
         
         fields = {} 
+        
+        pipe = redis.pipeline()
+
         with open(sourceFileName) as f:
 
             # Each row is a logEntry
@@ -303,19 +304,3 @@ class LogBrowser:
            ## If desired, uncomment to persist the valueMap for indexName
 
         print("Import of {} records completed.".format(le_count))
-       
-# fieldChoices = []
-
-# choices = []
-# searchKey = redis.get("logmap")
-# # print("get logmap:  {}".format(searchKey))
-
-# if len(searchKey) > 0:
-#     for i in redis.zrange(searchKey, "0", "-1"):
-#         choices.append((i, i))
-
-# fieldChoices = choices
-
-# print("searchKey {}".format(searchKey))
-# print("choices {}".format(choices))
-# print("fieldChoices {}".format(fieldChoices))
