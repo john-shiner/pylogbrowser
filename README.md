@@ -8,27 +8,27 @@ Platform:  Kubernetes (yaml files under k8s/ folder)
 
 ## Files/Usage
 
-* <b>app.py</b> == flask web app using LogBrowser module for services
+* <b>app.py</b> - flask web app using LogBrowser module for services
 
-* <b>Dockerfile</b> ==  builds that app as a container (based on python 3.8 image)
+* <b>Dockerfile</b> - builds that app as a container (based on python 3.8 image)
 
-* <b>docker-compose.yml</b> == assembles the flask and redis containers into an application
+* <b>docker-compose.yml</b> - ssembles the flask and redis containers into an application
 
-* <b>LogBrowser.py</b> == the processor loading, parsing, and storing LogFiles into Redis data structures
+* <b>LogBrowser.py</b> - the processor loading, parsing, and storing LogFiles into Redis data structures
 
-* <b>tasks.py</b> == Command-line tools exposed with the 'invoke' library.  Commands are summarized below.
+* <b>tasks.py</b> - Command-line tools exposed with the 'invoke' library.  Commands are summarized below.
 
-* <b>k8s/ directory</b> == contains yaml files for redis and web deployment and service management
+* <b>k8s/ directory</b> - contains yaml files for redis and web deployment and service management
 
 ## Docker-Compose Dev Deployment (not prod) Usage:
 
-* <b>docker-compose build</b>  # build the containers in the docker-compose file
+* <b>docker-compose build</b> - build the containers in the docker-compose file
 
-* <b>docker-compose up </b> # add -d to run detached (in background)
+* <b>docker-compose up </b> - # add -d to run detached (in background)
 
-* <b>docker-compose stop</b>  # stop the app, leave the containers
+* <b>docker-compose stop</b> - # stop the app, leave the containers
 
-* <b>docker-compose down</b>  # stop the app, remove the containers (not the images)
+* <b>docker-compose down</b> - # stop the app, remove the containers (not the images)
 
 Open/refresh http://localhost:8000 to see the app
 
